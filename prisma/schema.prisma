@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../db/url.db"
+}
+
+model Code {
+  id           Int      @id @default(autoincrement())
+  code         String   @unique
+  isMultiple   Boolean  @default(false)
+  urls         Url[]    // This creates a one-to-many relationship with the Url model
+  createdAt    DateTime @default(now())
+  timesClicked Int      @default(0)
+  belongsTo    User?    @relation(fields: [userId], references: [id])
+  userId       Int?
+}
+
+model Url {
+  id     Int    @id @default(autoincrement())
+  url    String
+  tag    String? // new field for tag
+  codeId Int    // This creates a foreign key to the Code model
+  code   Code   @relation(fields: [codeId], references: [id]) // This sets up the relationship to the Code model
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username    String @unique
+  password String
+  codes Code[]
+}

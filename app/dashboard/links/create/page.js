@@ -1,7 +1,7 @@
 'use client';
+import { Listbox, Dialog, Transition } from '@headlessui/react';
 import { useState } from 'react';
-import Link from 'next/link';
-import QRCode from 'qrcode';
+import { useRouter } from 'next/navigation';
 
 const UrlInput = ({
   urls,
@@ -50,21 +50,16 @@ const UrlInput = ({
   </div>
 );
 
-export default function Home() {
+export default function AddLink() {
+  const router = useRouter();
+  const [code, setCode] = useState('');
   const [urls, setUrls] = useState(['']);
   const [tags, setTags] = useState(['']);
-  const [qrCode, setQrCode] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const reset = () => {
-    setUrls((prevUrls) => ['']);
-    setTags((prevTags) => ['']);
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setLoading(true);
 
     const formData = new FormData();
     urls.forEach((url, index) => {
@@ -73,10 +68,11 @@ export default function Home() {
       }
       formData.append(`url${index + 1}`, url);
       formData.append(`tag${index + 1}`, tags[index]);
+      formData.append('code', code);
     });
 
     try {
-      const response = await fetch('/api/pendek', {
+      const response = await fetch('/api/pendekmx/create', {
         method: 'POST',
         body: formData,
       });
@@ -87,20 +83,14 @@ export default function Home() {
 
       const shortLink = await response.json();
 
-      const qrCode = await QRCode.toDataURL(
-        `${window.location.origin}/${shortLink.code}`
-      );
-      setQrCode(qrCode);
-
       if (shortLink.code) {
-        setMessage(
-          `Your short URL is: ${window.location.origin}/${shortLink.code}`
-        );
+        setMessage(`Link creation succeeded. Redirecting...`);
+        setTimeout(() => {
+          router.push(`/dashboard/links/${shortLink.code}`);
+        }, 1000);
       } else {
         throw new Error('Something went wrong. Please try again.');
       }
-
-      reset();
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -131,21 +121,26 @@ export default function Home() {
   };
 
   return (
-    <main className='relative flex flex-col items-center justify-center min-h-screen py-2'>
-      <div className='absolute top-4 right-4 flex'>
-        <Link href='/signup'>
-          <p className='mr-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
-            Sign Up
-          </p>
-        </Link>
-        <Link href='/login'>
-          <p className='bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded'>
-            Log In
-          </p>
-        </Link>
-      </div>
-      <h1 className='text-4xl mb-4'>C I N O . N E T</h1>
-      <form onSubmit={handleSubmit} className='w-full max-w-md'>
+    <div className='container mx-auto px-4 sm:px-6 lg:px-8 py-12'>
+      <h1 className='text-2xl font-semibold text-gray-900'>Create new code</h1>
+
+      <form onSubmit={handleSubmit} className='mt-8 space-y-6'>
+        <div className='mt-1 relative rounded-md shadow-sm bg-black'>
+          <label
+            htmlFor='code'
+            className='block text-lg font-medium text-white'
+          >
+            Code {message && <span className='text-red-500'>{message}</span>}
+          </label>
+          <input
+            id='code'
+            type='text'
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            className='focus:ring-indigo-500 focus:border-indigo-500 w-1/2 pl-3 pr-12 text-lg text-black border-gray-700 rounded-md'
+          />
+        </div>
+
         {urls.map((url, index) => (
           <UrlInput
             key={index}
@@ -159,57 +154,43 @@ export default function Home() {
             index={index}
           />
         ))}
-        <button
-          className={`flex-shrink-0 text-sm py-1 px-2 rounded mt-4 ${
-            loading
-              ? 'bg-gray-500 cursor-not-allowed'
-              : 'bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-white'
-          }`}
-          type='submit'
-          disabled={loading}
-        >
-          {loading ? (
-            <svg
-              className='animate-spin h-5 w-5 text-white'
-              xmlns='http://www.w3.org/2000/svg'
-              fill='none'
-              viewBox='0 0 24 24'
-            >
-              <circle
-                className='opacity-25'
-                cx='12'
-                cy='12'
-                r='10'
-                stroke='currentColor'
-                strokeWidth='4'
-              ></circle>
-              <path
-                className='opacity-75'
-                fill='currentColor'
-                d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-              ></path>
-            </svg>
-          ) : (
-            'Shorten'
-          )}
-        </button>
-      </form>
-      {message && (
-        <div
-          className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-7'
-          role='alert'
-        >
-          <strong className='font-bold'>Important!</strong>
-          <span className='block sm:inline'>
-            {' '}
-            {message}. Please copy this code or save your qr code, it will only
-            be shown once.
-          </span>
-          <div className='mt-4 flex justify-center'>
-            <img src={qrCode} alt='QR Code' className='w-32 h-32' />
-          </div>
+
+        <div className='flex items-center justify-between'>
+          <button
+            type='submit'
+            disabled={loading}
+            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+              loading
+                ? 'bg-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700 focus:outline-none'
+            }`}
+          >
+            {loading ? (
+              <svg
+                className='animate-spin h-5 w-5 mr-3'
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 24 24'
+              >
+                <circle
+                  className='opacity-25'
+                  cx='12'
+                  cy='12'
+                  r='10'
+                  stroke='currentColor'
+                  strokeWidth='4'
+                ></circle>
+                <path
+                  className='opacity-75'
+                  fill='currentColor'
+                  d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                ></path>
+              </svg>
+            ) : null}
+            Create new link
+          </button>
         </div>
-      )}
-    </main>
+      </form>
+    </div>
   );
 }
