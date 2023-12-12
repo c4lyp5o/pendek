@@ -12,7 +12,7 @@ export default function Login() {
     rememberMe: false,
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [message, setMessage] = useState(null);
 
   const handleChange = (e) => {
     const value =
@@ -24,12 +24,12 @@ export default function Login() {
     e.preventDefault();
 
     if (!formData.username || !formData.password) {
-      setError('Username and password are required');
+      setMessage('⚠️ Username and password are required');
       return;
     }
 
     setLoading(true);
-    setError(null);
+    setMessage(null);
 
     try {
       await login(
@@ -47,7 +47,8 @@ export default function Login() {
       );
       router.push('/dashboard');
     } catch (error) {
-      setError(error.message);
+      setMessage(`😢 Oops! Something went wrong: ${error.message}`);
+    } finally {
       setLoading(false);
     }
   };
@@ -123,14 +124,10 @@ export default function Login() {
                 ></path>
               </svg>
             ) : (
-              'Log In'
+              'Proceed'
             )}
           </button>
-          {error && (
-            <p className='text-red-500 mt-3'>
-              😢 Oops! Something went wrong: {error}
-            </p>
-          )}
+          {message && <p className='text-red-500 mt-3'>{message}</p>}
         </form>
       </div>
     </div>

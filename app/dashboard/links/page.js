@@ -3,22 +3,16 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
 
-import { withAuth } from '@/app/dashboard/withAuth';
-
 import LoadingScreen from '@/components/loadingScreen';
 import ErrorScreen from '@/components/errorScreen';
 
-const fetcher = (url) =>
-  fetch(url)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log(data);
-      return data;
-    });
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
-const Links = () => {
+export default function Links() {
   const [page, setPage] = useState(1);
-  const { data, error } = useSWR(`/api/pendekmx/getall?page=${page}`, fetcher);
+  const { data, error } = useSWR(`/api/pendekmx/getall?page=${page}`, fetcher, {
+    refreshInterval: 1000,
+  });
   const totalPages = Math.ceil(data?.totalCodes / 10);
 
   if (error) return <ErrorScreen />;
@@ -58,9 +52,9 @@ const Links = () => {
         <div className='flex items-center justify-between mt-4'>
           <button
             onClick={() => setPage(page - 1)}
-            disabled={page === 1}
+            disabled={page === 1 || data.totalCodes === 0}
             className={`px-4 py-2 rounded-md text-sm font-medium ${
-              page === 1
+              page === 1 || data.totalCodes === 0
                 ? 'cursor-not-allowed bg-gray-300'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
@@ -70,9 +64,9 @@ const Links = () => {
           <span className='text-sm font-medium'>Page {page}</span>
           <button
             onClick={() => setPage(page + 1)}
-            disabled={page === totalPages}
+            disabled={page === totalPages || data.totalCodes === 0}
             className={`px-4 py-2 rounded-md text-sm font-medium ${
-              page === totalPages
+              page === totalPages || data.totalCodes === 0
                 ? 'cursor-not-allowed bg-gray-300'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
@@ -83,6 +77,4 @@ const Links = () => {
       </div>
     </>
   );
-};
-
-export default withAuth(Links);
+}

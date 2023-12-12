@@ -1,19 +1,12 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { nanoid } from 'nanoid';
-
-function generateCode() {
-  return nanoid(7);
-}
+import { prisma } from '@/utils/prismaClient';
+import { generateUniqueCode } from '@/utils/codeChecker.js';
 
 export async function GET(request) {
-  const prisma = new PrismaClient();
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
 
   if (!code) {
-    prisma.$disconnect();
-    return NextResponse.json({ error: 'No content sent' }, { status: 400 });
+    return Response.json({ message: 'No content sent' }, { status: 400 });
   }
 
   try {
@@ -23,8 +16,7 @@ export async function GET(request) {
     });
 
     if (!codeEntry) {
-      prisma.$disconnect();
-      return NextResponse.json({ error: 'Code not found' }, { status: 404 });
+      return Response.json({ message: 'Code not found' }, { status: 404 });
     }
 
     await prisma.code.update({
@@ -32,16 +24,15 @@ export async function GET(request) {
       data: { timesClicked: { increment: 1 } },
     });
 
-    prisma.$disconnect();
-    return NextResponse.json(codeEntry);
+    return Response.json(codeEntry);
   } catch (error) {
-    prisma.$disconnect();
-    return NextResponse.json({ message: error.message }, { status: 500 });
+    return Response.json({ message: error.message }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
 export async function POST(request) {
-  const prisma = new PrismaClient();
   const formData = await request.formData();
   const entries = [...formData.entries()];
   const urls = entries
@@ -52,12 +43,11 @@ export async function POST(request) {
     .map(([, value]) => value);
 
   if (!urls.length) {
-    prisma.$disconnect();
-    return NextResponse.json({ error: 'No urls provided' }, { status: 400 });
+    return Response.json({ message: 'No urls provided' }, { status: 400 });
   }
 
   try {
-    const code = generateCode();
+    const code = await generateUniqueCode();
 
     const shortLink = await prisma.code.create({
       data: {
@@ -72,10 +62,10 @@ export async function POST(request) {
       },
     });
 
-    prisma.$disconnect();
-    return NextResponse.json(shortLink);
+    return Response.json(shortLink);
   } catch (error) {
-    prisma.$disconnect();
-    return NextResponse.json({ message: error.message }, { status: 500 });
+    return Response.json({ message: error.message }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }

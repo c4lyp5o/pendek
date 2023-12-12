@@ -1,0 +1,20 @@
+# Ignore node_modules
+node_modules
+
+# Ignore .env files as they may contain sensitive data
+.env
+
+# Ignore logs
+*.log
+
+# Ignore the build output directory
+.next
+
+# Ignore the npm debug log
+npm-debug.log*
+
+# Ignore the .git directory
+.git
+
+# Ignore the .DS_Store files (Mac OS)
+.DS_Store

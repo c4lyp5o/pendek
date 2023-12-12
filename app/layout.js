@@ -4,9 +4,9 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'B A R A N G P E N D E K',
+  title: 'B R G P D K',
   description:
-    'BarangPendek is a simple and efficient URL shortener built with Next.js and Prisma.',
+    'BRGPDK is a simple and efficient URL shortener built with Next.js and Prisma.',
 };
 
 export const viewport = {

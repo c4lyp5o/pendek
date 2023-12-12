@@ -1,46 +1,55 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from '@/utils/sessionMx';
 
 export default function SignUp() {
   const router = useRouter();
+  const { login } = useSession();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleLogin = async () => {
-    const toServerFormData = new FormData();
-    toServerFormData.append('username', formData.username);
-    toServerFormData.append('password', formData.password);
-
-    const response = await fetch('/api/pendekmx/login', {
-      method: 'POST',
-      body: toServerFormData,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message);
+    try {
+      await login(
+        {
+          username: formData.username,
+          password: formData.password,
+          rememberMe: formData.rememberMe,
+        },
+        {
+          optimisticData: {
+            isLoggedIn: true,
+            username: formData.username,
+          },
+        }
+      );
+      router.push('/dashboard');
+    } catch (error) {
+      setError(error.message);
+      setLoading(false);
     }
-
-    router.push('/dashboard');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      setMessage('⚠️ Passwords do not match');
       return;
     }
+
+    setLoading(true);
+    setMessage(null);
 
     const toServerFormData = new FormData();
     toServerFormData.append('username', formData.username);
@@ -52,17 +61,15 @@ export default function SignUp() {
         body: toServerFormData,
       });
 
-      if (response.ok) {
-        console.log('success');
-        // Handle successful signup
-        await handleLogin();
-      } else {
+      if (!response.ok) {
         const error = await response.json();
-        console.log('error', error);
-        // Handle error during signup
+        throw new Error(error.message);
       }
+
+      setMessage('🎉 You have successfully signed up! Logging you in...');
+      await handleLogin();
     } catch (error) {
-      console.error(error);
+      setMessage(`😢 Oops! Something went wrong: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -132,6 +139,7 @@ export default function SignUp() {
               'Proceed'
             )}
           </button>
+          {message && <p className='text-red-500 mt-3'>{message}</p>}
         </form>
       </div>
     </div>

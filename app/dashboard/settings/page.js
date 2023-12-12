@@ -1,7 +1,4 @@
-'use client';
-import { withAuth } from '@/app/dashboard/withAuth';
-
-const Settings = () => {
+export default function Settings() {
   return (
     <div className='w-full max-w-md mx-auto mt-4'>
       <form className='bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4'>
@@ -58,6 +55,4 @@ const Settings = () => {
       </form>
     </div>
   );
-};
-
-export default withAuth(Settings);
+}

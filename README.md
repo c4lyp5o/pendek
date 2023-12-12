@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🔗 B R G P D K Project 🔗
 
-## Getting Started
+This is a URL shortener project built with [Next.js](https://nextjs.org/). It allows users to shorten long URLs and manage their links.
 
-First, run the development server:
+## 🚀 Getting Started 🚀
+
+First, clone the repository to your local machine:
+
+```bash
+git clone https://github.com/c4lyp5o/pendek.git
+```
+
+Then, install the dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+If this is your first time running the project, you need to create a `.env` file in the root directory. Example can be found in `.env.example`. You need to fill in the environment variables with your own values.
+
+You would also need to migrate the database. Run the following command:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+Then generate the Prisma client:
+
+```bash
+npx prisma generate
+```
+
+Finally, run the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 with your browser to see the result.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 🎯 Features 🎯
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- User registration and authentication
+- URL shortening (public and private)
+- Link management
 
-## Learn More
+## ⚠️ Known Issues ⚠️
 
-To learn more about Next.js, take a look at the following resources:
+If there are any known issues or limitations with the project, list them here.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🤝 Contributing 🤝
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change. Please make sure to update tests as appropriate.
 
-## Deploy on Vercel
+Here's how you can contribute to the project:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## 📝 License 📝
+
+[MIT](https://choosealicense.com/licenses/mit/)

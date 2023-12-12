@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { prisma } from '@/utils/prismaClient';
+import bcrypt from 'bcrypt';
 
-export async function POST() {
-  const prisma = new PrismaClient();
+export async function POST(request) {
+  console.log('POST /api/pendekmx/signup');
   const formData = await request.formData();
   const entries = [...formData.entries()];
 
@@ -10,12 +10,15 @@ export async function POST() {
   const password = entries.find(([key]) => key === 'password')?.[1];
 
   if (!username || !password) {
-    return Response.json({ error: 'All fields are required' }, { status: 400 });
+    return Response.json(
+      { message: 'All fields are required' },
+      { status: 400 }
+    );
   }
 
   const existingUser = await prisma.user.findUnique({ where: { username } });
   if (existingUser) {
-    return Response.json({ error: 'User already exists' }, { status: 400 });
+    return Response.json({ message: 'User already exists' }, { status: 400 });
   }
 
   let hashedPassword;
@@ -23,11 +26,14 @@ export async function POST() {
     hashedPassword = await bcrypt.hash(password, 10);
   } catch (error) {
     console.error(error);
-    return Response.json({ error: 'Failed to hash password' }, { status: 500 });
+    return Response.json(
+      { message: 'Failed to hash password' },
+      { status: 500 }
+    );
   }
 
   try {
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         username,
         password: hashedPassword,
@@ -36,8 +42,7 @@ export async function POST() {
 
     return Response.json({ message: 'User created' });
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: 'Failed to create user' }, { status: 500 });
+    return Response.json({ message: 'Failed to create user' }, { status: 500 });
   } finally {
     await prisma.$disconnect();
   }

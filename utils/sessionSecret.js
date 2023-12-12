@@ -7,6 +7,7 @@ export const defaultSession = {
 export const sessionOptions = {
   password: process.env.COOKIE_PASSWORD,
   cookieName: process.env.COOKIE_NAME,
+  ttl: process.env.COOKIE_TTL,
   cookieOptions: {
     // secure only works in `https` environments
     // if your localhost is not on `https`, then use: `secure: process.env.NODE_ENV === "production"`

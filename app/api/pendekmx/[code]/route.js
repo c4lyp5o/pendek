@@ -1,26 +1,21 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/utils/prismaClient';
 import { cookies } from 'next/headers';
 import { sessionOptions } from '@/utils/sessionSecret';
 import { getIronSession } from 'iron-session';
 
 export async function GET(request, context) {
-  const { isLoggedIn, username } = await getIronSession(
-    cookies(),
-    sessionOptions
-  );
+  const session = await getIronSession(cookies(), sessionOptions);
 
-  if (!isLoggedIn) {
-    return Response.json({ error: 'Not logged in' }, { status: 401 });
+  if (!session.isLoggedIn) {
+    return Response.json({ message: 'Not logged in' }, { status: 401 });
   }
-
-  const prisma = new PrismaClient();
 
   try {
     const { code } = context.params;
     const singleCode = await prisma.code.findUnique({
       where: {
         code,
-        belongsTo: { username },
+        belongsTo: { username: session.username },
       },
       include: {
         urls: true,
@@ -28,13 +23,12 @@ export async function GET(request, context) {
     });
 
     if (!singleCode) {
-      return Response.json({ error: 'Code not found' }, { status: 404 });
+      return Response.json({ message: 'Code not found' }, { status: 404 });
     }
 
     return Response.json(singleCode);
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: 'Failed to get code' }, { status: 500 });
+    return Response.json({ message: 'Failed to get code' }, { status: 500 });
   } finally {
     await prisma.$disconnect();
   }
@@ -44,11 +38,10 @@ export async function PATCH(request, context) {
   const session = await getIronSession(cookies(), sessionOptions);
 
   if (session.isLoggedIn !== true) {
-    return Response.json({ error: 'Not logged in' }, { status: 401 });
+    return Response.json({ message: 'Not logged in' }, { status: 401 });
   }
 
-  const prisma = new PrismaClient();
-  const id = parseInt(context.params.code);
+  const id = parseInt(context.params.code); // sbb dlm route dah declare [code]. sbnrnya isi dia id
   const formData = await request.formData();
   const entries = [...formData.entries()];
 
@@ -61,7 +54,23 @@ export async function PATCH(request, context) {
     .map(([, value]) => value);
 
   if (!urls.length) {
-    return Response.json({ error: 'No urls provided' }, { status: 400 });
+    return Response.json({ message: 'No urls provided' }, { status: 400 });
+  }
+
+  const currentCode = await prisma.code.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  const existingCode = await prisma.code.findUnique({
+    where: {
+      code,
+    },
+  });
+
+  if (existingCode && existingCode.code !== currentCode.code) {
+    return Response.json({ message: 'Code already taken' }, { status: 400 });
   }
 
   try {
@@ -69,6 +78,7 @@ export async function PATCH(request, context) {
       where: { id: id },
       data: {
         code: code,
+        belongsTo: { connect: { username: session.username } },
         isMultiple: urls.length > 1,
         urls: {
           deleteMany: {
@@ -83,12 +93,11 @@ export async function PATCH(request, context) {
     });
 
     if (!shortLink) {
-      return Response.json({ error: 'Code not found' }, { status: 404 });
+      return Response.json({ message: 'Code not found' }, { status: 404 });
     }
 
     return Response.json({ message: 'Link updated' });
   } catch (error) {
-    console.error(error);
     return Response.json({ message: error.message }, { status: 500 });
   } finally {
     await prisma.$disconnect();
@@ -99,18 +108,28 @@ export async function DELETE(request, context) {
   const session = await getIronSession(cookies(), sessionOptions);
 
   if (session.isLoggedIn !== true) {
-    return Response.json({ error: 'Not logged in' }, { status: 401 });
+    return Response.json({ message: 'Not logged in' }, { status: 401 });
   }
 
-  const prisma = new PrismaClient();
   const code = context.params.code;
 
   if (!code) {
-    return Response.json({ error: 'No code provided' }, { status: 400 });
+    return Response.json({ message: 'No code provided' }, { status: 400 });
   }
 
   try {
-    const deletedUrls = await prisma.url.deleteMany({
+    const codeExists = await prisma.code.findUnique({
+      where: {
+        code,
+        belongsTo: { username: session.username },
+      },
+    });
+
+    if (!codeExists) {
+      return Response.json({ message: 'Code not found' }, { status: 404 });
+    }
+
+    await prisma.url.deleteMany({
       where: {
         code: {
           code,
@@ -118,20 +137,16 @@ export async function DELETE(request, context) {
       },
     });
 
-    const deletedCode = await prisma.code.delete({
+    await prisma.code.delete({
       where: {
         code,
       },
     });
 
-    if (!deletedCode) {
-      return Response.json({ error: 'Code not found' }, { status: 404 });
-    }
-
     return Response.json({ message: 'Link deleted' });
   } catch (error) {
     return Response.json(
-      { error: 'Failed to delete shortlink' },
+      { message: 'Failed to delete shortlink' },
       { status: 500 }
     );
   } finally {

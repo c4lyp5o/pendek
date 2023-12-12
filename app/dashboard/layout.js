@@ -1,4 +1,10 @@
+'use client';
 import Link from 'next/link';
+import { useSession } from '@/utils/sessionMx';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+import LoadingScreen from '@/components/loadingScreen';
 
 const links = [
   { href: '/dashboard', label: 'Home' },
@@ -7,7 +13,18 @@ const links = [
   { href: '/dashboard/logout', label: 'Logout' },
 ];
 
-export default function Layout({ children }) {
+export default function ProtectedLayout({ children }) {
+  const { session, isLoading } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !session.isLoggedIn) {
+      router.replace('/');
+    }
+  }, [isLoading, session.isLoggedIn, router]);
+
+  if (isLoading) return <LoadingScreen />;
+
   return (
     <main className='flex h-screen'>
       <div className='p-6 w-64 bg-black text-white'>

@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/utils/prismaClient';
 import { cookies } from 'next/headers';
 import { sessionOptions } from '@/utils/sessionSecret';
 import { getIronSession } from 'iron-session';
@@ -8,10 +7,9 @@ export async function POST(request) {
   const session = await getIronSession(cookies(), sessionOptions);
 
   if (session.isLoggedIn !== true) {
-    return Response.json({ error: 'Not logged in' }, { status: 401 });
+    return Response.json({ message: 'Not logged in' }, { status: 401 });
   }
 
-  const prisma = new PrismaClient();
   const formData = await request.formData();
   const entries = [...formData.entries()];
 
@@ -24,7 +22,17 @@ export async function POST(request) {
     .map(([, value]) => value);
 
   if (!urls.length) {
-    return Response.json({ error: 'No urls provided' }, { status: 400 });
+    return Response.json({ message: 'No urls provided' }, { status: 400 });
+  }
+
+  const existingCode = await prisma.code.findUnique({
+    where: {
+      code,
+    },
+  });
+
+  if (existingCode) {
+    return Response.json({ message: 'Code already taken' }, { status: 400 });
   }
 
   try {

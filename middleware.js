@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { sessionOptions } from '@/utils/sessionSecret';
-import { getIronSession } from 'iron-session';
+// import { cookies } from 'next/headers';
+// import { sessionOptions } from '@/utils/sessionSecret';
+// import { getIronSession } from 'iron-session';
 import rateLimit from './utils/rateLimit';
 import slowDown from './utils/slowDown';
 
@@ -28,17 +28,20 @@ const pendekPathHandler = async (request) => {
 };
 
 const pendekMxPathHandler = async (request) => {
-  const session = await getIronSession(cookies(), sessionOptions);
+  // const session = await getIronSession(cookies(), sessionOptions);
 
-  if (session.isLoggedIn !== true) {
-    return NextResponse.next();
-  }
+  // if (session.isLoggedIn !== true) {
+  //   const url = request.nextUrl.clone();
+  //   url.pathname = '/login';
+  //   return NextResponse.rewrite(url);
+  // }
 
-  console.log('from middleware', session);
+  // if (Date.now() - session.loginTime > process.env.LOGOUT_TIME) {
+  //   const url = request.nextUrl.clone();
+  //   url.pathname = '/login';
+  //   return NextResponse.rewrite(url);
+  // }
 
-  request.username = session.username;
-  request.isLoggedIn = session.isLoggedIn;
-  request.userId = session.userId;
   return NextResponse.next();
 };
 

@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Dialog } from '@headlessui/react';
 
-function DeleteModal({ code }) {
+export default function DeleteModal({ code }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -42,7 +43,6 @@ function DeleteModal({ code }) {
 
       {isOpen && (
         <div className='fixed z-10 inset-0 overflow-y-auto flex items-center justify-center bg-black bg-opacity-50'>
-          {/* ... */}
           <div className='bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full'>
             <div className='bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4'>
               <h3 className='text-lg leading-6 font-medium text-gray-900'>
@@ -108,5 +108,3 @@ function DeleteModal({ code }) {
     </div>
   );
 }
-
-export default DeleteModal;

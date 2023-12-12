@@ -4,9 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from '@/utils/sessionMx';
 import { defaultSession } from '@/utils/sessionSecret';
 
-import { withAuth } from '@/app/dashboard/withAuth';
-
-const Logout = () => {
+export default function Logout() {
   const { logout } = useSession();
   const router = useRouter();
 
@@ -22,6 +20,4 @@ const Logout = () => {
       <p className='text-2xl'>Logging out...</p>
     </div>
   );
-};
-
-export default withAuth(Logout);
+}

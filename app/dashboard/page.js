@@ -1,9 +1,12 @@
 'use client';
 import { useSession } from '@/utils/sessionMx';
-import { withAuth } from './withAuth';
 
-const Dashboard = () => {
-  const { session } = useSession();
+import LoadingScreen from '@/components/loadingScreen';
+
+export default function Dashboard() {
+  const { isLoading, session } = useSession();
+
+  if (isLoading) return <LoadingScreen />;
 
   return (
     <>
@@ -16,6 +19,4 @@ const Dashboard = () => {
       </p>
     </>
   );
-};
-
-export default withAuth(Dashboard);
+}

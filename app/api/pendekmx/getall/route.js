@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/utils/prismaClient';
 import { cookies } from 'next/headers';
 import { sessionOptions } from '@/utils/sessionSecret';
 import { getIronSession } from 'iron-session';
@@ -7,10 +7,8 @@ export async function GET() {
   const session = await getIronSession(cookies(), sessionOptions);
 
   if (session.isLoggedIn !== true) {
-    return Response.json({ error: 'Not logged in' }, { status: 401 });
+    return Response.json({ message: 'Not logged in' }, { status: 401 });
   }
-
-  const prisma = new PrismaClient();
 
   try {
     const pageSize = 10;
@@ -45,7 +43,7 @@ export async function GET() {
     return Response.json({ codes, totalCodes });
   } catch (error) {
     console.error(error);
-    return Response.json({ error: 'Failed to get codes' }, { status: 500 });
+    return Response.json({ message: 'Failed to get codes' }, { status: 500 });
   } finally {
     await prisma.$disconnect();
   }

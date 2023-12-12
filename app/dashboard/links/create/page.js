@@ -3,52 +3,7 @@ import { Listbox, Dialog, Transition } from '@headlessui/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const UrlInput = ({
-  urls,
-  url,
-  tag,
-  updateUrl,
-  updateTag,
-  addUrlInput,
-  removeUrlInput,
-  index,
-}) => (
-  <div key={index} className='flex items-center border-b border-teal-500 py-2'>
-    <input
-      className='appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none'
-      type='url'
-      placeholder='Enter URL'
-      value={url}
-      onChange={(e) => updateUrl(index, e.target.value)}
-      required
-    />
-    <input
-      className='ml-3 appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none'
-      type='text'
-      placeholder='Site Tag'
-      value={tag}
-      onChange={(e) => updateTag(index, e.target.value)}
-    />
-    {index === urls.length - 1 && (
-      <button
-        type='button'
-        onClick={addUrlInput}
-        className='ml-2 bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded'
-      >
-        +
-      </button>
-    )}
-    {urls.length > 1 && (
-      <button
-        type='button'
-        onClick={() => removeUrlInput(index)}
-        className='ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded'
-      >
-        -
-      </button>
-    )}
-  </div>
-);
+import UrlInput from '@/components/urlInput';
 
 export default function AddLink() {
   const router = useRouter();
@@ -61,14 +16,16 @@ export default function AddLink() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    setLoading(true);
     const formData = new FormData();
     urls.forEach((url, index) => {
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        throw new Error('Invalid URL: ' + url);
+        setMessage('🚫 Invalid URL: ' + url);
+        return;
       }
+      formData.append('code', code);
       formData.append(`url${index + 1}`, url);
       formData.append(`tag${index + 1}`, tags[index]);
-      formData.append('code', code);
     });
 
     try {
@@ -78,21 +35,14 @@ export default function AddLink() {
       });
 
       if (!response.ok) {
-        throw new Error('Something went wrong. Please try again.');
+        const errorData = await response.json();
+        throw new Error(errorData.message);
       }
 
-      const shortLink = await response.json();
-
-      if (shortLink.code) {
-        setMessage(`Link creation succeeded. Redirecting...`);
-        setTimeout(() => {
-          router.push(`/dashboard/links/${shortLink.code}`);
-        }, 1000);
-      } else {
-        throw new Error('Something went wrong. Please try again.');
-      }
+      setMessage(`👏 Link creation succeeded. Redirecting...`);
+      router.push(`/dashboard/links/${code}`);
     } catch (error) {
-      setMessage(error.message);
+      setMessage(`😕 Oops! Something went wrong: ${error.message}`);
     } finally {
       setLoading(false);
     }

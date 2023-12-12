@@ -3,7 +3,7 @@ import useSWRMutation from 'swr/mutation';
 
 import { defaultSession } from './sessionSecret';
 
-const sessionApiRoute = '/api/pendekmx/usermx';
+const sessionApiRoute = '/api/usermx';
 
 async function fetchJson(input, init) {
   const response = await fetch(input, {
