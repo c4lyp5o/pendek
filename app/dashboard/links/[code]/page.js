@@ -57,6 +57,17 @@ export default function EditLink() {
     e.preventDefault();
 
     setLoading(true);
+
+    if (
+      code.match(/[^a-zA-Z0-9]/g) ||
+      code === 'dashboard' ||
+      code === 'login' ||
+      code === 'signup'
+    ) {
+      setMessage('🚫 Invalid code');
+      return;
+    }
+
     const formData = new FormData();
     urls.forEach((url, index) => {
       if (!url.url.startsWith('http://') && !url.url.startsWith('https://')) {
