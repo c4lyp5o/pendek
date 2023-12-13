@@ -86,7 +86,9 @@ export async function PATCH(request, context) {
           },
           create: urls.map((url, index) => ({
             url,
-            tag: tags[index] || null,
+            tag: ['undefined', 'null'].includes(tags[index])
+              ? null
+              : tags[index],
           })),
         },
       },
