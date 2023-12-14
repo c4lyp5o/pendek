@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dialog } from '@headlessui/react';
 
 export default function DeleteModal({ code }) {
   const router = useRouter();
@@ -34,12 +33,12 @@ export default function DeleteModal({ code }) {
 
   return (
     <div>
-      <span
+      <button
         onClick={() => setIsOpen(true)}
-        className='ml-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600'
+        className='inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'
       >
         Delete
-      </span>
+      </button>
 
       {isOpen && (
         <div className='fixed z-10 inset-0 overflow-y-auto flex items-center justify-center bg-black bg-opacity-50'>

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import QRCode from 'qrcode';
+import { toast } from 'react-toastify';
 
 import UrlInput from '@/components/urlInput';
 
@@ -20,25 +21,27 @@ export default function Home() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setLoading(true);
 
     const formData = new FormData();
     urls.forEach((url, index) => {
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        throw new Error('Invalid URL: ' + url);
+        toast.error('🚫 Invalid URL: ' + url);
       }
       formData.append(`url${index + 1}`, url);
       formData.append(`tag${index + 1}`, tags[index]);
     });
 
     try {
+      setLoading(true);
+
       const response = await fetch('/api/pendek', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Something went wrong. Please try again.');
+        const errorData = await response.json();
+        throw new Error(errorData.message);
       }
 
       const shortLink = await response.json();
@@ -48,17 +51,15 @@ export default function Home() {
       );
       setQrCode(qrCode);
 
-      if (shortLink.code) {
-        setMessage(
-          `Your short URL is: ${window.location.origin}/${shortLink.code}`
-        );
-      } else {
-        throw new Error('Something went wrong. Please try again.');
-      }
+      toast.success(`👏 Link creation succeeded.`);
+      setMessage(
+        `Your short URL is: ${window.location.origin}/${shortLink.code}. Please copy this code or save your qr code, it will only
+            be shown once.`
+      );
 
       reset();
     } catch (error) {
-      setMessage(error.message);
+      setMessage(`😕 Oops! Something went wrong: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -156,11 +157,7 @@ export default function Home() {
           role='alert'
         >
           <strong className='font-bold'>Important!</strong>
-          <span className='block sm:inline'>
-            {' '}
-            {message}. Please copy this code or save your qr code, it will only
-            be shown once.
-          </span>
+          <span className='block sm:inline'> {message}.</span>
           <div className='mt-4 flex justify-center'>
             <Image src={qrCode} width={250} height={250} alt='QR Code' />
           </div>

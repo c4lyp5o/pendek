@@ -28,6 +28,7 @@ function classNames(...classes) {
 
 export default function ProtectedLayout({ children }) {
   const { session, isLoading } = useSession();
+  const currentPath = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -112,7 +113,7 @@ export default function ProtectedLayout({ children }) {
                               <Link href={item.href}>
                                 <p
                                   className={classNames(
-                                    item.href === usePathname()
+                                    item.href === currentPath
                                       ? 'bg-gray-800 text-white'
                                       : 'text-gray-400 hover:text-white hover:bg-gray-800',
                                     'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
@@ -159,7 +160,7 @@ export default function ProtectedLayout({ children }) {
                       <Link href={item.href}>
                         <p
                           className={classNames(
-                            item.href === usePathname()
+                            item.href === currentPath
                               ? 'bg-gray-800 text-white'
                               : 'text-gray-400 hover:text-white hover:bg-gray-800',
                             'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
