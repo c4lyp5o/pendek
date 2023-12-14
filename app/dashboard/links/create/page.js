@@ -16,8 +16,6 @@ export default function AddLink() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    setLoading(true);
-
     if (
       code.match(/[^a-zA-Z0-9]/g) ||
       code === 'dashboard' ||
@@ -40,6 +38,8 @@ export default function AddLink() {
     });
 
     try {
+      setLoading(true);
+
       const response = await fetch('/api/pendekmx/create', {
         method: 'POST',
         body: formData,

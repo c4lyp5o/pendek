@@ -56,8 +56,6 @@ export default function EditLink() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setLoading(true);
-
     if (
       code.match(/[^a-zA-Z0-9]/g) ||
       code === 'dashboard' ||
@@ -80,6 +78,8 @@ export default function EditLink() {
     });
 
     try {
+      setLoading(true);
+
       const response = await fetch(`/api/pendekmx/${link.id}`, {
         method: 'PATCH',
         body: formData,
