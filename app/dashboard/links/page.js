@@ -1,10 +1,8 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
-import QRCode from 'qrcode';
 
 import LoadingScreen from '@/components/loadingScreen';
 import ErrorScreen from '@/components/errorScreen';
@@ -13,7 +11,6 @@ const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function Links() {
   const [page, setPage] = useState(1);
-  const [qrCodeURLs, setQrCodeURLs] = useState({});
   const { data, isLoading, error } = useSWR(
     `/api/pendekmx/getall?page=${page}`,
     fetcher,
@@ -23,24 +20,10 @@ export default function Links() {
   );
   const totalPages = Math.ceil(data?.totalCodes / 10);
 
-  useEffect(() => {
-    const generateQRCode = async () => {
-      if (!data || !Array.isArray(data.codes)) {
-        return;
-      }
-
-      const urls = {};
-      for (const link of data.codes) {
-        const url = await QRCode.toDataURL(
-          `${window.location.origin}/${link.code}`
-        );
-        urls[link.id] = url;
-      }
-      setQrCodeURLs(urls);
-    };
-
-    generateQRCode();
-  }, [data]);
+  const convertISODate = (date) => {
+    const dateObject = new Date(date);
+    return dateObject.toLocaleDateString();
+  };
 
   if (error) return <ErrorScreen />;
   if (isLoading) return <LoadingScreen />;
@@ -68,18 +51,19 @@ export default function Links() {
               className='col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow'
             >
               <div className='flex flex-1 flex-col p-8'>
-                <Image
-                  className='mx-auto h-32 w-32 flex-shrink-0 rounded-full'
-                  width={128}
-                  height={128}
-                  src={qrCodeURLs[link.id] || ''}
-                  alt='QR Code'
-                />
                 <Link href={`/dashboard/links/${link.code}`}>
                   <h3 className='text-blue-600 hover:underline'>{link.code}</h3>
-                  <h3 className='text-black'>
+                  <p className='text-black text-sm'>
+                    Created: {convertISODate(link.createdAt)}
+                  </p>
+                  <ul>
+                    <p className='text-black text-xs'>
+                      {link.urls.map((url) => url.url).join(', ')}
+                    </p>
+                  </ul>
+                  <p className='text-black text-sm'>
                     Accessed: {link.timesClicked} times
-                  </h3>
+                  </p>
                 </Link>
               </div>
             </li>

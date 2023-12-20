@@ -17,7 +17,7 @@ export default function Logout() {
 
   return (
     <div className='flex items-center justify-center h-screen'>
-      <p className='text-2xl'>Logging out...</p>
+      <p className='text-2xl animate-pulse'>Logging out...</p>
     </div>
   );
 }

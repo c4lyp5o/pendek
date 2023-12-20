@@ -16,12 +16,12 @@ export default function AddLink() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (
-      code.match(/[^a-zA-Z0-9]/g) ||
-      code === 'dashboard' ||
-      code === 'login' ||
-      code === 'signup'
-    ) {
+    if (urls.some((url) => !url)) {
+      toast.error('🚫 URL is required');
+      return;
+    }
+
+    if (code.match(/[^a-zA-Z0-9]|^(dashboard|login|signup|api)$/i)) {
       toast.error('🚫 Invalid code');
       return;
     }
@@ -29,7 +29,7 @@ export default function AddLink() {
     const formData = new FormData();
     urls.forEach((url, index) => {
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        toast.error('🚫 Invalid URL: ' + url);
+        toast.error(`🚫 Invalid URL: ${url}`);
         return;
       }
       formData.append('code', code);
@@ -50,7 +50,7 @@ export default function AddLink() {
         throw new Error(errorData.message);
       }
 
-      toast.success(`👏 Link creation succeeded. Redirecting...`);
+      toast.success(`👏 Link creation succeeded`);
       router.push(`/dashboard/links/${code}`);
     } catch (error) {
       toast.error(`😕 Oops! Something went wrong: ${error.message}`);
@@ -139,39 +139,24 @@ export default function AddLink() {
 
       <div className='mt-6 flex items-center justify-end gap-x-6'>
         <Link href='/dashboard/links'>
-          <p className='text-sm font-semibold leading-6 text-white'>Cancel</p>
+          <button
+            type='button'
+            className={`'w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm bg-red-600 hover:bg-red-700 focus:outline-none' ${
+              loading && 'animate-pulse cursor-not-allowed'
+            }`}
+          >
+            Cancel
+          </button>
         </Link>
         <button
           type='submit'
           disabled={loading}
           className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
             loading
-              ? 'bg-gray-500 cursor-not-allowed'
-              : 'rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'
+              ? 'bg-gray-500 animate-pulse cursor-not-allowed'
+              : 'rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-500 hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'
           }`}
         >
-          {loading ? (
-            <svg
-              className='animate-spin h-5 w-5 mr-3'
-              xmlns='http:www.w3.org/2000/svg'
-              fill='none'
-              viewBox='0 0 24 24'
-            >
-              <circle
-                className='opacity-25'
-                cx='12'
-                cy='12'
-                r='10'
-                stroke='currentColor'
-                strokeWidth='4'
-              ></circle>
-              <path
-                className='opacity-75'
-                fill='currentColor'
-                d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-              ></path>
-            </svg>
-          ) : null}
           Save
         </button>
       </div>

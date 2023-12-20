@@ -24,8 +24,8 @@ export default function Home() {
         <title>{code}</title>
         <h1 className='text-4xl mb-4'>Your URLs:</h1>
         <ul className='space-y-2'>
-          {data.urls.map((urlObject, index) => (
-            <li key={index} className='border p-2 rounded-md'>
+          {data.urls.map((urlObject) => (
+            <li key={urlObject.url} className='border p-2 rounded-md'>
               <Link href={urlObject.url}>
                 <p className='text-blue-500 hover:underline'>
                   {urlObject.tag || urlObject.url}

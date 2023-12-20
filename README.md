@@ -1,4 +1,4 @@
-# 🔗 B R G P D K Project 🔗
+# 🔗 P E N D E K Project 🔗
 
 This is a URL shortener project built with [Next.js](https://nextjs.org/). It allows users to shorten long URLs and manage their links.
 

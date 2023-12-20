@@ -94,10 +94,6 @@ export async function PATCH(request, context) {
       },
     });
 
-    if (!shortLink) {
-      return Response.json({ message: 'Code not found' }, { status: 404 });
-    }
-
     return Response.json({ message: 'Link updated' });
   } catch (error) {
     return Response.json({ message: error.message }, { status: 500 });
@@ -126,10 +122,6 @@ export async function DELETE(request, context) {
         belongsTo: { username: session.username },
       },
     });
-
-    if (!codeExists) {
-      return Response.json({ message: 'Code not found' }, { status: 404 });
-    }
 
     await prisma.url.deleteMany({
       where: {

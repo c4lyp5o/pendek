@@ -13,12 +13,12 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSession } from '@/utils/sessionMx';
 
-import LoadingScreen from '@/components/loadingScreen';
+import LoadingScreenNoThanks from '@/components/loadingScreenNoThanks';
 
 const links = [
   { href: '/dashboard', label: 'Home', icon: HomeIcon },
   { href: '/dashboard/links', label: 'Links', icon: GlobeEuropeAfricaIcon },
-  { href: '/dashboard/settings', label: 'Settings', icon: ServerIcon },
+  // { href: '/dashboard/settings', label: 'Settings', icon: ServerIcon },
   { href: '/dashboard/logout', label: 'Logout', icon: ForwardIcon },
 ];
 
@@ -38,7 +38,7 @@ export default function ProtectedLayout({ children }) {
     }
   }, [isLoading, session.isLoggedIn, router]);
 
-  if (isLoading) return <LoadingScreen />;
+  if (isLoading || !session.isLoggedIn) return <LoadingScreenNoThanks />;
 
   return (
     <div>
@@ -102,7 +102,7 @@ export default function ProtectedLayout({ children }) {
                       src='https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500'
                       alt='Your Company'
                     /> */}
-                    B R G P D K
+                    P E N D E K . I N G
                   </div>
                   <nav className='flex flex-1 flex-col'>
                     <ul role='list' className='flex flex-1 flex-col gap-y-7'>
@@ -112,6 +112,7 @@ export default function ProtectedLayout({ children }) {
                             <li key={item.label}>
                               <Link href={item.href}>
                                 <p
+                                  onClick={() => setSidebarOpen(false)}
                                   className={classNames(
                                     item.href === currentPath
                                       ? 'bg-gray-800 text-white'
@@ -149,7 +150,7 @@ export default function ProtectedLayout({ children }) {
               src='https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500'
               alt='Your Company'
             /> */}
-            B R G P D K
+            P E N D E K . I N G
           </div>
           <nav className='flex flex-1 flex-col'>
             <ul role='list' className='flex flex-1 flex-col gap-y-7'>

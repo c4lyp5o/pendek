@@ -43,13 +43,6 @@ export async function POST(request) {
     isPasswordCorrect = await bcrypt.compare(password, user.password);
   } catch (error) {
     return Response.json(
-      { message: 'Failed to compare passwords' },
-      { status: 500 }
-    );
-  }
-
-  if (!isPasswordCorrect) {
-    return Response.json(
       { message: 'Incorrect username/password' },
       { status: 400 }
     );
@@ -64,6 +57,7 @@ export async function POST(request) {
 
   await session.save();
 
+  prisma.$disconnect();
   return Response.json(session);
 }
 

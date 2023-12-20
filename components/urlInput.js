@@ -28,7 +28,6 @@ export default function UrlInput({
                 onChange={(e) => updateUrl(index, e.target.value)}
                 className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
                 placeholder='Example: https://www.google.com'
-                required
               />
             </div>
           </div>
@@ -54,18 +53,19 @@ export default function UrlInput({
                 id='tag'
                 value={tag || ''}
                 onChange={(e) => updateTag(index, e.target.value)}
-                className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+                className='block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
                 placeholder='Example: Google'
                 aria-describedby='tag-optional'
               />
             </div>
           </div>
         </div>
-        <div className='flex flex-col items-end space-y-2'>
+        <div className='flex flex-col items-end space-y-4'>
           {index === urls.length - 1 && (
             <button
+              type='button'
               onClick={addUrlInput}
-              className='text-sm leading-6 text-white rounded-md'
+              className='text-sm leading-6 text-white border border-1 rounded-md'
             >
               <svg
                 xmlns='http://www.w3.org/2000/svg'
@@ -83,8 +83,9 @@ export default function UrlInput({
           )}
           {urls.length > 1 && (
             <button
+              type='button'
               onClick={() => removeUrlInput(index)}
-              className='text-sm leading-6 text-white rounded-md mt-2'
+              className='text-sm leading-6 text-white border border-1 rounded-md'
             >
               <svg
                 xmlns='http://www.w3.org/2000/svg'
