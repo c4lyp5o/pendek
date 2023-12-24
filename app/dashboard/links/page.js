@@ -4,7 +4,7 @@ import useSWR from 'swr';
 import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 
-import LoadingScreen from '@/components/loadingScreen';
+import LoadingScreenNoThanks from '@/components/loadingScreenNoThanks';
 import ErrorScreen from '@/components/errorScreen';
 
 const fetcher = (url) => fetch(url).then((res) => res.json());
@@ -26,16 +26,14 @@ export default function Links() {
   };
 
   if (error) return <ErrorScreen />;
-  if (isLoading) return <LoadingScreen />;
+  if (isLoading) return <LoadingScreenNoThanks />;
 
   return (
     <>
       <div className='flex justify-between items-center mb-4'>
-        <h1 className='text-base font-semibold leading-7 text-white'>
-          Your Links
-        </h1>
+        <h1 className='text-base font-semibold leading-7'>Your Links</h1>
         <Link href='/dashboard/links/create'>
-          <button className='inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'>
+          <button className='inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'>
             Create
           </button>
         </Link>
@@ -122,7 +120,7 @@ export default function Links() {
                     <p
                       className={
                         page === index + 1
-                          ? 'relative z-10 inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+                          ? 'relative z-10 inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
                           : 'relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
                       }
                     >

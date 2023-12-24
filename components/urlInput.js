@@ -15,7 +15,7 @@ export default function UrlInput({
           <div>
             <label
               htmlFor='url'
-              className='block text-sm font-medium leading-6 text-white'
+              className='block text-sm font-medium leading-6'
             >
               URL
             </label>
@@ -35,7 +35,7 @@ export default function UrlInput({
             <div className='flex justify-between'>
               <label
                 htmlFor='tag'
-                className='block text-sm font-medium leading-6 text-white'
+                className='block text-sm font-medium leading-6'
               >
                 Site Tag
               </label>
@@ -65,7 +65,7 @@ export default function UrlInput({
             <button
               type='button'
               onClick={addUrlInput}
-              className='text-sm leading-6 text-white border border-1 rounded-md'
+              className='text-sm leading-6 border border-1 rounded-md dark:border-gray-300 border-gray-600'
             >
               <svg
                 xmlns='http://www.w3.org/2000/svg'
@@ -85,7 +85,7 @@ export default function UrlInput({
             <button
               type='button'
               onClick={() => removeUrlInput(index)}
-              className='text-sm leading-6 text-white border border-1 rounded-md'
+              className='text-sm leading-6 border border-1 rounded-md dark:border-gray-300 border-gray-600'
             >
               <svg
                 xmlns='http://www.w3.org/2000/svg'

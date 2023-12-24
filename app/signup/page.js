@@ -80,17 +80,17 @@ export default function SignUp() {
       toast.success('🎉 You have successfully signed up!');
       await handleLogin();
     } catch (error) {
-      toast.error(`😢 Oops! Something went wrong: ${error.message}`);
+      toast.error(`😢 Oops! ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className='p-4 sm:p-0 flex items-center justify-center h-screen bg-black'>
+    <div className='p-4 sm:p-0 flex items-center justify-center h-screen'>
       <div className='p-10 bg-white rounded-lg shadow-2xl w-96'>
         <Link href='/'>
-          <p className='absolute top-3 left-3 text-white'>
+          <p className='absolute top-3 left-3 dark:border-gray-300 border-gray-600'>
             <svg
               xmlns='http://www.w3.org/2000/svg'
               fill='none'

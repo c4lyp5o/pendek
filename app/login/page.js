@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useSession } from '@/utils/sessionMx';
 import { toast } from 'react-toastify';
 
+import LoadingScreenNoThanks from '@/components/loadingScreenNoThanks';
+
 export default function Login() {
   const router = useRouter();
   const { session, isLoading, login } = useSession();
@@ -32,40 +34,30 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await login(
-        {
-          username: formData.username,
-          password: formData.password,
-          rememberMe: formData.rememberMe,
-        },
-        {
-          optimisticData: {
-            isLoggedIn: true,
-            username: formData.username,
-          },
-        }
-      );
+      await login({
+        username: formData.username,
+        password: formData.password,
+        rememberMe: formData.rememberMe,
+      });
       router.push('/dashboard');
     } catch (error) {
-      toast.error(`😢 Oops! Something went wrong: ${error.message}`);
+      toast.error(`😢 Oops! ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (session.isLoggedIn && !isLoading) {
-      router.push('/dashboard');
-    }
+    if (!isLoading && session.isLoggedIn) router.push('/dashboard');
   }, [session, isLoading, router]);
 
-  if (isLoading || !session) return null;
+  if (isLoading) return <LoadingScreenNoThanks />;
 
   return (
-    <div className='p-4 sm:p-0 flex items-center justify-center h-screen bg-black'>
+    <div className='p-4 sm:p-0 flex items-center justify-center h-screen'>
       <div className='p-10 bg-white rounded shadow-2xl w-96'>
         <Link href='/'>
-          <p className='absolute top-3 left-3 text-white'>
+          <p className='absolute top-3 left-3 dark:border-gray-300 border-gray-600'>
             <svg
               xmlns='http://www.w3.org/2000/svg'
               fill='none'

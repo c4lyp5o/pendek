@@ -2,17 +2,14 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/utils/sessionMx';
-import { defaultSession } from '@/utils/sessionSecret';
 
 export default function Logout() {
   const { logout } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    logout(null, {
-      optimisticData: defaultSession,
-    });
-    router.push('/');
+    logout(null);
+    router.replace('/');
   }, [router, logout]);
 
   return (

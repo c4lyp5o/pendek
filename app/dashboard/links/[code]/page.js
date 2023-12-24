@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 
 import DeleteModal from '@/app/dashboard/links/[code]/deleteModal';
 import UrlInput from '@/components/urlInput';
+import ExpandedQrCode from '@/components/expandedQrCode';
 import LoadingScreenNoThanks from '@/components/loadingScreenNoThanks';
 import ErrorScreen from '@/components/errorScreen';
 
@@ -22,6 +23,7 @@ export default function EditLink() {
   const [urls, setUrls] = useState(['']);
   const [tags, setTags] = useState(['']);
   const [qrCode, setQrCode] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const url = `/api/pendekmx/${currentCode.split('/links/')[1]}`;
@@ -96,7 +98,7 @@ export default function EditLink() {
         toast.success('👏 Link updated successfully');
       }
     } catch (error) {
-      toast.error(`😕 Oops! Something went wrong: ${error.message}`);
+      toast.error(`😕 Oops! ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -135,16 +137,14 @@ export default function EditLink() {
     <form onSubmit={handleSubmit}>
       <div className='space-y-12'>
         <div className='border-b border-white/10 pb-12'>
-          <h2 className='text-base font-semibold leading-7 text-white'>
-            Editing link
-          </h2>
+          <h2 className='text-base font-semibold leading-7'>Editing link</h2>
 
           <div className='mt-5 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
             <div className='sm:col-span-4 flex flex-col sm:flex-row items-center sm:justify-between'>
               <div className='w-full sm:w-auto'>
                 <label
                   htmlFor='shortcode'
-                  className='block text-sm font-medium leading-6 text-white'
+                  className='block text-sm font-medium leading-6'
                 >
                   Shortcode
                 </label>
@@ -160,7 +160,7 @@ export default function EditLink() {
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
                       autoComplete='shortcode'
-                      className='flex-1 border-0 bg-transparent py-1.5 pl-1 text-white focus:ring-0 sm:text-sm sm:leading-6'
+                      className='flex-1 border-0 bg-white py-1.5 pl-1 dark:text-white focus:ring-0 sm:text-sm sm:leading-6'
                       placeholder='SuperDuperShortCode'
                     />
                   </div>
@@ -168,13 +168,23 @@ export default function EditLink() {
               </div>
               <div className='mt-8 sm:mt-0 w-full sm:w-auto flex justify-center sm:justify-end'>
                 {qrCode && (
-                  <Image
-                    className='sm:h-32 sm:w-32 h-64 w-64 flex-shrink-0'
-                    src={qrCode}
-                    alt='QR Code'
-                    height={64}
-                    width={64}
-                  />
+                  <div className='relative'>
+                    <Image
+                      className='h-64 w-64 flex-shrink-0 sm:h-32 sm:w-32'
+                      src={qrCode}
+                      alt='QR Code'
+                      height='64'
+                      width='64'
+                      onClick={() => {
+                        if (
+                          typeof window !== 'undefined' &&
+                          window.innerWidth > 640
+                        ) {
+                          setIsModalOpen(true);
+                        }
+                      }}
+                    />
+                  </div>
                 )}
               </div>
             </div>
@@ -200,15 +210,23 @@ export default function EditLink() {
         </div>
       </div>
 
+      {isModalOpen && (
+        <ExpandedQrCode
+          qrCode={qrCode}
+          setIsModalOpen={setIsModalOpen}
+          isModalOpen={isModalOpen}
+        />
+      )}
+
       <div className='mt-6 flex items-center justify-end gap-x-6'>
         <DeleteModal frontLoading={loading} code={link} />
         <button
           type='submit'
           disabled={loading}
-          className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+          className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm ${
             loading
               ? 'bg-gray-500 animate-pulse cursor-not-allowed'
-              : 'rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'
+              : 'rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'
           }`}
         >
           Save

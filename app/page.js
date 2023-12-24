@@ -64,7 +64,7 @@ export default function Home() {
 
       reset();
     } catch (error) {
-      setMessage(`😕 Oops! Something went wrong: ${error.message}`);
+      setMessage(`😕 Oops! ${error.message}`);
     } finally {
       setLoading(false);
     }

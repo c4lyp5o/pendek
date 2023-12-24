@@ -1,16 +1,19 @@
 import { prisma } from '@/utils/prismaClient';
 import bcrypt from 'bcrypt';
 import { cookies } from 'next/headers';
-import { defaultSession, sessionOptions } from '@/utils/sessionSecret';
+import { defaultSession, sessionOptions, sleep } from '@/utils/sessionSecret';
 import { getIronSession } from 'iron-session';
 
 export async function GET(request) {
   const session = await getIronSession(cookies(), sessionOptions);
 
+  await sleep(500);
+
   if (session.isLoggedIn !== true) {
     return Response.json(defaultSession);
   }
 
+  prisma.$disconnect();
   return Response.json(session);
 }
 
@@ -28,20 +31,18 @@ export async function POST(request) {
     );
   }
 
-  let user;
-  try {
-    user = await prisma.user.findUnique({ where: { username } });
-  } catch (error) {
+  const user = await prisma.user.findUnique({ where: { username } });
+
+  if (!user) {
     return Response.json(
       { message: 'Incorrect username/password' },
       { status: 400 }
     );
   }
 
-  let isPasswordCorrect;
-  try {
-    isPasswordCorrect = await bcrypt.compare(password, user.password);
-  } catch (error) {
+  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordCorrect) {
     return Response.json(
       { message: 'Incorrect username/password' },
       { status: 400 }
@@ -57,6 +58,8 @@ export async function POST(request) {
 
   await session.save();
 
+  await sleep(500);
+
   prisma.$disconnect();
   return Response.json(session);
 }
@@ -66,5 +69,8 @@ export async function DELETE() {
 
   session.destroy();
 
-  return Response.json(defaultSession);
+  await sleep(500);
+
+  prisma.$disconnect();
+  return Response.json({ message: 'Logged out' });
 }

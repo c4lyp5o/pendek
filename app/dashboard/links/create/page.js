@@ -53,7 +53,7 @@ export default function AddLink() {
       toast.success(`👏 Link creation succeeded`);
       router.push(`/dashboard/links/${code}`);
     } catch (error) {
-      toast.error(`😕 Oops! Something went wrong: ${error.message}`);
+      toast.error(`😕 Oops! ${error.message}`);
     } finally {
       setLoading(false);
     }

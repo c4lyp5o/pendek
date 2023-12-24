@@ -6,7 +6,7 @@ import LoadingScreenNoThanks from '@/components/loadingScreenNoThanks';
 export default function Dashboard() {
   const { isLoading, session } = useSession();
 
-  if (isLoading || !session.isLoggedIn) return <LoadingScreenNoThanks />;
+  if (isLoading) return <LoadingScreenNoThanks />;
 
   return (
     <>
