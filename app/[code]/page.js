@@ -1,22 +1,18 @@
 'use client';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import useSWR from 'swr';
 
 import LoadingScreen from '@/components/loadingScreen';
-import ErrorScreen from '@/components/errorScreen';
+import Fourohfour from '@/components/404';
 
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function Home() {
   const { code } = useParams();
-  const { data, error } = useSWR(
-    code ? `/api/pendek?code=${code}` : null,
-    fetcher
-  );
+  const { data } = useSWR(`/api/pendek?code=${code}`, fetcher);
 
-  if (error) return <ErrorScreen />;
   if (!data) return <LoadingScreen />;
+  if (data.error === 'Code not found') return <Fourohfour />;
 
   if (data.isMultiple) {
     return (
@@ -26,11 +22,11 @@ export default function Home() {
         <ul className='space-y-2'>
           {data.urls.map((urlObject) => (
             <li key={urlObject.url} className='border p-2 rounded-md'>
-              <Link href={urlObject.url}>
+              <a href={urlObject.url} target='_blank' rel='noopener noreferrer'>
                 <p className='text-blue-500 hover:underline'>
                   {urlObject.tag || urlObject.url}
                 </p>
-              </Link>
+              </a>
             </li>
           ))}
         </ul>

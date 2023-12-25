@@ -27,7 +27,7 @@ function classNames(...classes) {
 }
 
 export default function ProtectedLayout({ children }) {
-  const { isLoading, session } = useSession();
+  const { session, isLoading } = useSession();
   const currentPath = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);

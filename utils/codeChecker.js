@@ -12,5 +12,6 @@ export async function generateUniqueCode() {
     });
   } while (codeEntry);
 
+  await prisma.$disconnect();
   return code;
 }

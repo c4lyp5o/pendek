@@ -123,6 +123,10 @@ export async function DELETE(request, context) {
       },
     });
 
+    if (!codeExists) {
+      return Response.json({ message: 'Code not found' }, { status: 404 });
+    }
+
     await prisma.url.deleteMany({
       where: {
         code: {

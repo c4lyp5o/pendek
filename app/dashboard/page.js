@@ -4,7 +4,7 @@ import { useSession } from '@/utils/sessionMx';
 import LoadingScreenNoThanks from '@/components/loadingScreenNoThanks';
 
 export default function Dashboard() {
-  const { isLoading, session } = useSession();
+  const { session, isLoading } = useSession();
 
   if (isLoading) return <LoadingScreenNoThanks />;
 

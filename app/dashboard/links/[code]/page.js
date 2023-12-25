@@ -160,7 +160,7 @@ export default function EditLink() {
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
                       autoComplete='shortcode'
-                      className='flex-1 border-0 bg-white py-1.5 pl-1 dark:text-white focus:ring-0 sm:text-sm sm:leading-6'
+                      className='flex-1 border-0 bg-white py-1.5 pl-1 text-black focus:ring-0 sm:text-sm sm:leading-6'
                       placeholder='SuperDuperShortCode'
                     />
                   </div>
@@ -210,14 +210,6 @@ export default function EditLink() {
         </div>
       </div>
 
-      {isModalOpen && (
-        <ExpandedQrCode
-          qrCode={qrCode}
-          setIsModalOpen={setIsModalOpen}
-          isModalOpen={isModalOpen}
-        />
-      )}
-
       <div className='mt-6 flex items-center justify-end gap-x-6'>
         <DeleteModal frontLoading={loading} code={link} />
         <button
@@ -231,6 +223,14 @@ export default function EditLink() {
         >
           Save
         </button>
+
+        {isModalOpen && (
+          <ExpandedQrCode
+            qrCode={qrCode}
+            setIsModalOpen={setIsModalOpen}
+            isModalOpen={isModalOpen}
+          />
+        )}
       </div>
     </form>
   );

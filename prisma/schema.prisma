@@ -4,18 +4,20 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:../db/url.db"
+  url      = env("DATABASE_URL")
 }
 
 model Code {
   id           Int      @id @default(autoincrement())
   code         String   @unique
+  // isEnabled    Boolean  @default(true) TODO: add this
   isMultiple   Boolean  @default(false)
   urls         Url[]    // This creates a one-to-many relationship with the Url model
-  createdAt    DateTime @default(now())
   timesClicked Int      @default(0)
   belongsTo    User?    @relation(fields: [userId], references: [id])
   userId       Int?
+  createdAt    DateTime @default(now())
+  // updatedAt    DateTime? @updatedAt TODO: add this
 }
 
 model Url {
@@ -31,4 +33,12 @@ model User {
   username    String @unique
   password String
   codes Code[]
+  // createdAt DateTime @default(now()) TODO: add this
+}
+
+model Superuser {
+  id       Int    @id @default(autoincrement())
+  username    String @unique
+  password String
+  // createdAt DateTime @default(now()) TODO: add this
 }

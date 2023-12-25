@@ -13,7 +13,7 @@ export async function GET(request) {
     return Response.json(defaultSession);
   }
 
-  prisma.$disconnect();
+  await prisma.$disconnect();
   return Response.json(session);
 }
 
@@ -60,7 +60,7 @@ export async function POST(request) {
 
   await sleep(500);
 
-  prisma.$disconnect();
+  await prisma.$disconnect();
   return Response.json(session);
 }
 
@@ -71,6 +71,6 @@ export async function DELETE() {
 
   await sleep(500);
 
-  prisma.$disconnect();
+  await prisma.$disconnect();
   return Response.json({ message: 'Logged out' });
 }

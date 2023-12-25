@@ -8,37 +8,55 @@ export default function ExpandedQrCode({
   setIsModalOpen,
 }) {
   return (
-    <Transition appear show={isModalOpen} as={Fragment}>
-      <Dialog
-        as='div'
-        className='fixed inset-0 z-10 overflow-y-auto'
-        onClose={() => setIsModalOpen(false)}
-      >
-        <div className='min-h-screen px-4 text-center'>
-          <Dialog.Overlay className='fixed inset-0 bg-black opacity-30' />
-          <span
-            className='inline-block h-screen align-middle'
-            aria-hidden='true'
-          >
-            &#8203;
-          </span>
-          <Dialog.Title
-            as='h3'
-            className='text-lg leading-6 font-medium text-gray-900'
-          >
-            QR Code
-          </Dialog.Title>
-          <div className='inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl'>
-            <Image
-              className='h-256 w-256'
-              src={qrCode}
-              alt='QR Code'
-              height='256'
-              width='256'
-            />
+    <Transition.Root show={isModalOpen} as={Fragment}>
+      <Dialog as='div' className='relative z-10' onClose={setIsModalOpen}>
+        <Transition.Child
+          as={Fragment}
+          enter='ease-out duration-300'
+          enterFrom='opacity-0'
+          enterTo='opacity-100'
+          leave='ease-in duration-200'
+          leaveFrom='opacity-100'
+          leaveTo='opacity-0'
+        >
+          <div className='fixed inset-0 bg-black bg-opacity-50 transition-opacity' />
+        </Transition.Child>
+
+        <div className='fixed inset-0 z-10 w-screen overflow-y-auto'>
+          <div className='flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0'>
+            <Transition.Child
+              as={Fragment}
+              enter='ease-out duration-300'
+              enterFrom='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
+              enterTo='opacity-100 translate-y-0 sm:scale-100'
+              leave='ease-in duration-200'
+              leaveFrom='opacity-100 translate-y-0 sm:scale-100'
+              leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
+            >
+              <Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6'>
+                <div>
+                  <div className='mt-3 text-center sm:mt-5'>
+                    <Dialog.Title
+                      as='h3'
+                      className='text-base font-semibold leading-6 text-gray-900'
+                    >
+                      QR Code
+                    </Dialog.Title>
+                    <div className='flex justify-center'>
+                      <Image
+                        src={qrCode}
+                        alt='QR Code'
+                        height='512'
+                        width='512'
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
           </div>
         </div>
       </Dialog>
-    </Transition>
+    </Transition.Root>
   );
 }
