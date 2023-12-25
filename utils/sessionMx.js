@@ -4,7 +4,7 @@ import useSWRMutation from 'swr/mutation';
 import { defaultSession } from './sessionSecret';
 
 const sessionApiRoute = '/api/usermx';
-const superadminApiRoute = '/api/superusermx';
+// const superadminApiRoute = '/api/superusermx';
 
 async function fetchJson(input, init) {
   const response = await fetch(input, {
@@ -52,29 +52,29 @@ export function useSession() {
 
   const { trigger: logout } = useSWRMutation(sessionApiRoute, doLogout);
 
-  const { data: sessionSuper, isLoading: isLoadingSuper } = useSWR(
-    superadminApiRoute,
-    fetchJson,
-    {
-      fallbackData: { isSuperAdmin: false },
-    }
-  );
+  // const { data: sessionSuper, isLoading: isLoadingSuper } = useSWR(
+  //   superadminApiRoute,
+  //   fetchJson,
+  //   {
+  //     fallbackData: { isSuperAdmin: false },
+  //   }
+  // );
 
-  const { trigger: loginSuper } = useSWRMutation(superadminApiRoute, doLogin, {
-    revalidate: false,
-    populateCache: true,
-  });
+  // const { trigger: loginSuper } = useSWRMutation(superadminApiRoute, doLogin, {
+  //   revalidate: false,
+  //   populateCache: true,
+  // });
 
-  const { trigger: logoutSuper } = useSWRMutation(superadminApiRoute, doLogout);
+  // const { trigger: logoutSuper } = useSWRMutation(superadminApiRoute, doLogout);
 
   return {
     session,
     login,
     logout,
-    sessionSuper,
-    loginSuper,
-    logoutSuper,
+    // sessionSuper,
+    // loginSuper,
+    // logoutSuper,
     isLoading,
-    isLoadingSuper,
+    // isLoadingSuper,
   };
 }
