@@ -1,3 +1,4 @@
+'use client';
 import Link from 'next/link';
 
 export default function Fourohfour() {
@@ -6,23 +7,20 @@ export default function Fourohfour() {
       className='flex flex-col items-center justify-center min-h-screen text-center'
       role='alert'
     >
-      <title>404 - Page Not Found</title>
-      <h1 className='mb-4 sm:text-4xl text-2xl font-bold'>
-        404 - Page Not Found
-      </h1>
+      <title>404</title>
+      <h1 className='mb-4 sm:text-4xl text-2xl font-bold'>Page Not Found</h1>
       <span className='text-6xl' role='img' aria-label='Face in Clouds Emoji'>
         😶‍🌫️
       </span>
-      <p className='text-2xl mt-4'>
+      <p className='text-xl mt-4'>
         We searched high and low but could not find what you were looking for...
       </p>
-      <Link
-        href='/'
-        className='mt-4 text-blue-500 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500'
-        aria-label='Go back to homepage'
+      <button
+        aria-label='Go back home'
+        className='mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md px-4 py-2'
       >
-        Go back to homepage
-      </Link>
+        <Link href='/'>Go back home</Link>
+      </button>
     </div>
   );
 }

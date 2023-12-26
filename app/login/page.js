@@ -42,7 +42,6 @@ export default function Login() {
       router.push('/dashboard');
     } catch (error) {
       toast.error(`😢 Oops! ${error.message}`);
-    } finally {
       setLoading(false);
     }
   };

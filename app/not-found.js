@@ -20,12 +20,13 @@ export default function NotFound() {
       <p className='text-2xl mt-4'>
         We searched high and low but could not find what you were looking for...
       </p>
-      <Link
-        href={'/' + (session && session.isLoggedIn ? 'dashboard' : '')}
-        className='mt-4 text-blue-500 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500'
-        aria-label='Go back to homepage'
-      >
-        Go back to homepage
+      <Link href={'/' + (session && session.isLoggedIn ? 'dashboard' : '')}>
+        <button
+          aria-label='Go back home'
+          className='bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md px-4 py-2'
+        >
+          Go back home
+        </button>
       </Link>
     </div>
   );

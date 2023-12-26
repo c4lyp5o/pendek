@@ -19,29 +19,6 @@ export default function SignUp() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = async () => {
-    try {
-      await login(
-        {
-          username: formData.username,
-          password: formData.password,
-          rememberMe: formData.rememberMe,
-        },
-        {
-          optimisticData: {
-            isLoggedIn: true,
-            username: formData.username,
-          },
-        }
-      );
-      router.push('/dashboard');
-    } catch (error) {
-      toast.error(`😢 Oops! Something went wrong: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -78,10 +55,14 @@ export default function SignUp() {
       }
 
       toast.success('🎉 You have successfully signed up!');
-      await handleLogin();
+      await login({
+        username: formData.username,
+        password: formData.password,
+        rememberMe: formData.rememberMe,
+      });
+      router.push('/dashboard');
     } catch (error) {
       toast.error(`😢 Oops! ${error.message}`);
-    } finally {
       setLoading(false);
     }
   };
