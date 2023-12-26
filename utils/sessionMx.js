@@ -50,7 +50,10 @@ export function useSession() {
     populateCache: true,
   });
 
-  const { trigger: logout } = useSWRMutation(sessionApiRoute, doLogout);
+  const { trigger: logout } = useSWRMutation(sessionApiRoute, doLogout, {
+    revalidate: false,
+    populateCache: true,
+  });
 
   // const { data: sessionSuper, isLoading: isLoadingSuper } = useSWR(
   //   superadminApiRoute,

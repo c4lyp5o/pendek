@@ -26,6 +26,20 @@ export default function AddLink() {
       return;
     }
 
+    if (code.length < 4) {
+      toast.error('🚫 Code must be at least 4 characters');
+      return;
+    }
+
+    if (code.length > 25) {
+      toast.error('🚫 Code must be less than 25 characters');
+      return;
+    }
+
+    if (code.match(/\s/)) {
+      setCode(code.replace(/\s/g, ''));
+    }
+
     const formData = new FormData();
     urls.forEach((url, index) => {
       if (!url.startsWith('http://') && !url.startsWith('https://')) {

@@ -9,10 +9,10 @@ const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function Home() {
   const { code } = useParams();
-  const { data } = useSWR(`/api/pendek?code=${code}`, fetcher);
+  const { data, error } = useSWR(`/api/pendek?code=${code}`, fetcher);
 
   if (!data) return <LoadingScreen />;
-  if (data.error === 'Code not found') return <Fourohfour />;
+  if (error) return <Fourohfour />;
 
   if (data.isMultiple) {
     return (
