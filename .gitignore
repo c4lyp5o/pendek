@@ -5,6 +5,7 @@
 /.pnp
 .pnp.js
 .yarn/install-state.gz
+.swc
 
 # testing
 /coverage
@@ -41,3 +42,6 @@ prisma/migrations
 
 # db
 db/*
+
+# test folder
+tests

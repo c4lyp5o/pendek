@@ -13,10 +13,7 @@ export default function Links() {
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = useSWR(
     `/api/pendekmx/getall?page=${page}`,
-    fetcher,
-    {
-      refreshInterval: 1000,
-    }
+    fetcher
   );
   const totalPages = Math.ceil(data?.totalCodes / 10);
 

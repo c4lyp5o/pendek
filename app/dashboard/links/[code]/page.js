@@ -38,6 +38,7 @@ export default function EditLink() {
         url: url.url,
         tag: url.tag,
       }));
+
       setUrls(urlsAndTags.map((item) => ({ url: item.url })));
       setTags(urlsAndTags.map((item) => ({ tag: item.tag })));
 
