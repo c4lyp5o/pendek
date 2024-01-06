@@ -5,11 +5,11 @@ export async function GET(request) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
 
-  if (!code) {
-    return Response.json({ message: 'No content sent' }, { status: 400 });
-  }
-
   try {
+    if (!code) {
+      return Response.json({ message: 'No content sent' }, { status: 400 });
+    }
+
     const codeEntry = await prisma.code.findUnique({
       where: { code },
       include: { urls: true },
@@ -42,11 +42,11 @@ export async function POST(request) {
     .filter(([key]) => key.startsWith('tag'))
     .map(([, value]) => value);
 
-  if (!urls.length) {
-    return Response.json({ message: 'No urls provided' }, { status: 400 });
-  }
-
   try {
+    if (!urls.length) {
+      return Response.json({ message: 'No urls provided' }, { status: 400 });
+    }
+
     const code = await generateUniqueCode();
 
     const shortLink = await prisma.code.create({

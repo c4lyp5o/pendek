@@ -58,7 +58,7 @@ export default function SignUp() {
       await login({
         username: formData.username,
         password: formData.password,
-        rememberMe: formData.rememberMe,
+        // rememberMe: formData.rememberMe,
       });
       router.push('/dashboard');
     } catch (error) {

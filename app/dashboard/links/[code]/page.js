@@ -40,6 +40,7 @@ export default function EditLink() {
         url: url.url,
         tag: url.tag,
       }));
+
       setUrls(urlsAndTags.map((item) => ({ url: item.url })));
       setTags(urlsAndTags.map((item) => ({ tag: item.tag })));
 
@@ -68,6 +69,7 @@ export default function EditLink() {
     }
 
     const formData = new FormData();
+
     urls.forEach((url, index) => {
       if (!url.url.startsWith('http://') && !url.url.startsWith('https://')) {
         toast.error(`🚫 Invalid URL: ${url}`);
