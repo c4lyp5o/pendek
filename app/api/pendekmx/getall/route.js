@@ -4,18 +4,18 @@ import { sessionOptions } from '@/utils/sessionSecret';
 import { getIronSession } from 'iron-session';
 
 export async function GET() {
+  const session = await getIronSession(cookies(), sessionOptions);
+
+  if (session.isLoggedIn !== true) {
+    return Response.json({ message: 'Not logged in' }, { status: 401 });
+  }
+
+  const pageSize = 10;
+  const page = 1;
+
+  const skip = pageSize * (page - 1);
+
   try {
-    const session = await getIronSession(cookies(), sessionOptions);
-
-    if (session.isLoggedIn !== true) {
-      return Response.json({ message: 'Not logged in' }, { status: 401 });
-    }
-
-    const pageSize = 10;
-    const page = 1;
-
-    const skip = pageSize * (page - 1);
-
     const codes = await prisma.code.findMany({
       where: {
         belongsTo: {
