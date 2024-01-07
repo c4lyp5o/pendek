@@ -1,5 +1,5 @@
 'use client';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import useSWR from 'swr';
 
 import LoadingScreen from '@/components/loadingScreen';
@@ -8,6 +8,7 @@ import Fourohfour from '@/components/404';
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function Home() {
+  const router = useRouter();
   const { code } = useParams();
   const { data } = useSWR(`/api/pendek?code=${code}`, fetcher);
 
@@ -33,7 +34,7 @@ export default function Home() {
       </main>
     );
   } else {
-    window.location.href = data.urls[0].url;
+    router.push(data.urls[0].url);
     return null;
   }
 }
