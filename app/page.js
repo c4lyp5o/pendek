@@ -15,8 +15,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   const reset = () => {
-    setUrls((prevUrls) => ['']);
-    setTags((prevTags) => ['']);
+    setUrls(['']);
+    setTags(['']);
   };
 
   const handleSubmit = async (event) => {
@@ -28,6 +28,7 @@ export default function Home() {
     }
 
     const formData = new FormData();
+
     urls.forEach((url, index) => {
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         toast.error(`🚫 Invalid URL: ${url}`);
