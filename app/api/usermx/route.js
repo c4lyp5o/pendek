@@ -19,10 +19,9 @@ export async function GET(request) {
 
 export async function POST(request) {
   const formData = await request.formData();
-  const entries = [...formData.entries()];
 
-  const username = entries.find(([key]) => key === 'username')?.[1];
-  const password = entries.find(([key]) => key === 'password')?.[1];
+  const username = formData.get('username');
+  const password = formData.get('password');
 
   if (!username || !password) {
     return Response.json(
@@ -31,16 +30,21 @@ export async function POST(request) {
     );
   }
 
-  const user = await prisma.user.findUnique({ where: { username } });
+  const existingUser = await prisma.user.findUnique({
+    where: { username: username },
+  });
 
-  if (!user) {
+  if (!existingUser) {
     return Response.json(
       { message: 'Incorrect username/password' },
       { status: 400 }
     );
   }
 
-  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+  const isPasswordCorrect = await bcrypt.compare(
+    password,
+    existingUser.password
+  );
 
   if (!isPasswordCorrect) {
     return Response.json(
@@ -52,8 +56,8 @@ export async function POST(request) {
   const session = await getIronSession(cookies(), sessionOptions);
 
   session.isLoggedIn = true;
-  session.username = user.username;
-  session.userId = user.id;
+  session.username = existingUser.username;
+  session.userId = existingUser.id;
   session.loginTime = Date.now();
 
   await session.save();
