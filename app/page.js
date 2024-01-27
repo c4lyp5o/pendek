@@ -1,22 +1,23 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import QRCode from 'qrcode';
 import { toast } from 'react-toastify';
 
 import UrlInput from '@/components/urlInput';
+import LinkCreated from '@/components/linkCreated';
 
 export default function Home() {
   const [urls, setUrls] = useState(['']);
   const [tags, setTags] = useState(['']);
+  const [shortCode, setShortCode] = useState('');
   const [qrCode, setQrCode] = useState(null);
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(false);
 
   const reset = () => {
-    setUrls((prevUrls) => ['']);
-    setTags((prevTags) => ['']);
+    setUrls(['']);
+    setTags(['']);
   };
 
   const handleSubmit = async (event) => {
@@ -28,6 +29,7 @@ export default function Home() {
     }
 
     const formData = new FormData();
+
     urls.forEach((url, index) => {
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         toast.error(`🚫 Invalid URL: ${url}`);
@@ -38,6 +40,7 @@ export default function Home() {
 
     try {
       setLoading(true);
+      setMessage(false);
 
       const response = await fetch('/api/pendek', {
         method: 'POST',
@@ -54,17 +57,16 @@ export default function Home() {
       const qrCode = await QRCode.toDataURL(
         `${window.location.origin}/${shortLink.code}`
       );
+
+      setShortCode(shortLink.code);
       setQrCode(qrCode);
 
       toast.success(`👏 Link creation succeeded.`);
-      setMessage(
-        `Your short URL is: ${window.location.origin}/${shortLink.code}. Please copy this code or save your qr code, it will only
-            be shown once.`
-      );
+      setMessage(true);
 
       reset();
     } catch (error) {
-      setMessage(`😕 Oops! ${error.message}`);
+      toast.error(`😕 Oops! ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -134,18 +136,7 @@ export default function Home() {
           Shorten
         </button>
       </form>
-      {message && (
-        <div
-          className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-7 text-center'
-          role='alert'
-        >
-          <strong className='font-bold'>Important!</strong>
-          <span className='block sm:inline'> {message}.</span>
-          <div className='mt-4 flex justify-center'>
-            <Image src={qrCode} width={250} height={250} alt='QR Code' />
-          </div>
-        </div>
-      )}
+      {message && <LinkCreated shortCode={shortCode} qrCode={qrCode} />}
     </div>
   );
 }

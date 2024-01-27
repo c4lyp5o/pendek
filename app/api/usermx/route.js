@@ -5,72 +5,88 @@ import { defaultSession, sessionOptions, sleep } from '@/utils/sessionSecret';
 import { getIronSession } from 'iron-session';
 
 export async function GET(request) {
-  const session = await getIronSession(cookies(), sessionOptions);
+  try {
+    const session = await getIronSession(cookies(), sessionOptions);
 
-  await sleep(500);
+    await sleep(500);
 
-  if (session.isLoggedIn !== true) {
-    return Response.json(defaultSession);
+    if (session.isLoggedIn !== true) {
+      return Response.json(defaultSession);
+    }
+
+    return Response.json(session);
+  } catch (error) {
+    console.error(error);
+    return Response.json({ message: 'Failed to get session' }, { status: 500 });
   }
-
-  await prisma.$disconnect();
-  return Response.json(session);
 }
 
 export async function POST(request) {
-  const formData = await request.formData();
-  const entries = [...formData.entries()];
+  try {
+    const formData = await request.formData();
 
-  const username = entries.find(([key]) => key === 'username')?.[1];
-  const password = entries.find(([key]) => key === 'password')?.[1];
+    const username = formData.get('username');
+    const password = formData.get('password');
 
-  if (!username || !password) {
-    return Response.json(
-      { message: 'All fields are required' },
-      { status: 400 }
+    if (!username || !password) {
+      return Response.json(
+        { message: 'All fields are required' },
+        { status: 400 }
+      );
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { username: username },
+    });
+
+    if (!existingUser) {
+      return Response.json(
+        { message: 'Incorrect username/password' },
+        { status: 400 }
+      );
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      existingUser.password
     );
+
+    if (!isPasswordCorrect) {
+      return Response.json(
+        { message: 'Incorrect username/password' },
+        { status: 400 }
+      );
+    }
+
+    const session = await getIronSession(cookies(), sessionOptions);
+
+    session.isLoggedIn = true;
+    session.username = existingUser.username;
+    session.userId = existingUser.id;
+    session.loginTime = Date.now();
+
+    await session.save();
+
+    await sleep(500);
+
+    return Response.json(session);
+  } catch (error) {
+    console.error(error);
+    return Response.json({ message: 'Failed to login' }, { status: 500 });
   }
-
-  const user = await prisma.user.findUnique({ where: { username } });
-
-  if (!user) {
-    return Response.json(
-      { message: 'Incorrect username/password' },
-      { status: 400 }
-    );
-  }
-
-  const isPasswordCorrect = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordCorrect) {
-    return Response.json(
-      { message: 'Incorrect username/password' },
-      { status: 400 }
-    );
-  }
-
-  const session = await getIronSession(cookies(), sessionOptions);
-
-  session.isLoggedIn = true;
-  session.username = user.username;
-  session.userId = user.id;
-  session.loginTime = Date.now();
-
-  await session.save();
-
-  await sleep(500);
-
-  await prisma.$disconnect();
-  return Response.json(session);
 }
 
 export async function DELETE() {
-  const session = await getIronSession(cookies(), sessionOptions);
+  try {
+    const session = await getIronSession(cookies(), sessionOptions);
 
-  session.destroy();
+    session.destroy();
 
-  await sleep(500);
+    await sleep(500);
 
-  await prisma.$disconnect();
-  return Response.json({ message: 'Logged out' });
+    return Response.json({ message: 'Logged out' });
+  } catch (error) {
+    console.error(error);
+    return Response.json({ message: 'Failed to logout' }, { status: 500 });
+  }
 }

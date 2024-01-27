@@ -44,7 +44,5 @@ export async function GET() {
   } catch (error) {
     console.error(error);
     return Response.json({ message: 'Failed to get codes' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

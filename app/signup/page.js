@@ -55,10 +55,11 @@ export default function SignUp() {
       }
 
       toast.success('🎉 You have successfully signed up!');
+
       await login({
         username: formData.username,
         password: formData.password,
-        rememberMe: formData.rememberMe,
+        rememberMe: false,
       });
       router.push('/dashboard');
     } catch (error) {

@@ -4,13 +4,13 @@ import { sessionOptions } from '@/utils/sessionSecret';
 import { getIronSession } from 'iron-session';
 
 export async function GET(request, context) {
-  const session = await getIronSession(cookies(), sessionOptions);
-
-  if (!session.isLoggedIn) {
-    return Response.json({ message: 'Not logged in' }, { status: 401 });
-  }
-
   try {
+    const session = await getIronSession(cookies(), sessionOptions);
+
+    if (!session.isLoggedIn) {
+      return Response.json({ message: 'Not logged in' }, { status: 401 });
+    }
+
     const { code } = context.params;
     const singleCode = await prisma.code.findUnique({
       where: {
@@ -29,52 +29,55 @@ export async function GET(request, context) {
     return Response.json(singleCode);
   } catch (error) {
     return Response.json({ message: 'Failed to get code' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
 export async function PATCH(request, context) {
-  const session = await getIronSession(cookies(), sessionOptions);
-
-  if (session.isLoggedIn !== true) {
-    return Response.json({ message: 'Not logged in' }, { status: 401 });
-  }
-
-  const id = parseInt(context.params.code); // sbb dlm route dah declare [code]. sbnrnya isi dia id
-  const formData = await request.formData();
-  const entries = [...formData.entries()];
-
-  const code = entries.find(([key]) => key === 'code')?.[1];
-  const urls = entries
-    .filter(([key]) => key.startsWith('url'))
-    .map(([, value]) => value);
-  const tags = entries
-    .filter(([key]) => key.startsWith('tag'))
-    .map(([, value]) => value);
-
-  if (!urls.length) {
-    return Response.json({ message: 'No urls provided' }, { status: 400 });
-  }
-
-  const currentCode = await prisma.code.findUnique({
-    where: {
-      id,
-    },
-  });
-
-  const existingCode = await prisma.code.findUnique({
-    where: {
-      code,
-    },
-  });
-
-  if (existingCode && existingCode.code !== currentCode.code) {
-    return Response.json({ message: 'Code already taken' }, { status: 400 });
-  }
-
   try {
-    const shortLink = await prisma.code.update({
+    const session = await getIronSession(cookies(), sessionOptions);
+
+    if (session.isLoggedIn !== true) {
+      return Response.json({ message: 'Not logged in' }, { status: 401 });
+    }
+
+    const id = parseInt(context.params.code); // sbb dlm route dah declare [code]. sbnrnya isi dia id
+    const formData = await request.formData();
+    const entries = [...formData.entries()];
+
+    const code = formData.get('code');
+    const urls = entries
+      .filter(([key]) => key.startsWith('url'))
+      .map(([, value]) => value);
+    const tags = entries
+      .filter(([key]) => key.startsWith('tag'))
+      .map(([, value]) => value);
+
+    if (!urls.length) {
+      return Response.json({ message: 'No urls provided' }, { status: 400 });
+    }
+
+    const currentCode = await prisma.code.findUnique({
+      where: {
+        id: id,
+        belongsTo: { username: session.username },
+      },
+    });
+
+    if (!currentCode) {
+      return Response.json({ message: 'Code not found' }, { status: 404 });
+    }
+
+    const existingCode = await prisma.code.findUnique({
+      where: {
+        code: code,
+      },
+    });
+
+    if (existingCode && existingCode.code !== currentCode.code) {
+      return Response.json({ message: 'Code already taken' }, { status: 400 });
+    }
+
+    await prisma.code.update({
       where: { id: id },
       data: {
         code: code,
@@ -97,28 +100,26 @@ export async function PATCH(request, context) {
     return Response.json({ message: 'Link updated' });
   } catch (error) {
     return Response.json({ message: error.message }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
 export async function DELETE(request, context) {
-  const session = await getIronSession(cookies(), sessionOptions);
-
-  if (session.isLoggedIn !== true) {
-    return Response.json({ message: 'Not logged in' }, { status: 401 });
-  }
-
-  const code = context.params.code;
-
-  if (!code) {
-    return Response.json({ message: 'No code provided' }, { status: 400 });
-  }
-
   try {
+    const session = await getIronSession(cookies(), sessionOptions);
+
+    if (session.isLoggedIn !== true) {
+      return Response.json({ message: 'Not logged in' }, { status: 401 });
+    }
+
+    const id = parseInt(context.params.code); // sbb dlm route dah declare [code]. sbnrnya isi dia id
+
+    if (!id) {
+      return Response.json({ message: 'No code provided' }, { status: 400 });
+    }
+
     const codeExists = await prisma.code.findUnique({
       where: {
-        code,
+        id: id,
         belongsTo: { username: session.username },
       },
     });
@@ -130,14 +131,14 @@ export async function DELETE(request, context) {
     await prisma.url.deleteMany({
       where: {
         code: {
-          code,
+          id: id,
         },
       },
     });
 
     await prisma.code.delete({
       where: {
-        code,
+        id: id,
       },
     });
 
@@ -147,7 +148,5 @@ export async function DELETE(request, context) {
       { message: 'Failed to delete shortlink' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

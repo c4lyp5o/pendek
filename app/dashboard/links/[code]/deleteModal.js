@@ -13,7 +13,7 @@ export default function DeleteModal({ code, frontLoading }) {
     const deleteLink = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/pendekmx/${code.code}`, {
+        const response = await fetch(`/api/pendekmx/${code.id}`, {
           method: 'DELETE',
         });
 

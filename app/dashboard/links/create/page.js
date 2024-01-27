@@ -41,6 +41,7 @@ export default function AddLink() {
     }
 
     const formData = new FormData();
+
     urls.forEach((url, index) => {
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         toast.error(`🚫 Invalid URL: ${url}`);
@@ -99,7 +100,7 @@ export default function AddLink() {
     <form onSubmit={handleSubmit}>
       <div className='space-y-12'>
         <div className='border-b border-white/10 pb-12'>
-          <h1 className='text-base font-semibold leading-7 text-white'>
+          <h1 className='text-base font-semibold leading-7'>
             Creating a new link
           </h1>
 
@@ -107,7 +108,7 @@ export default function AddLink() {
             <div className='sm:col-span-4'>
               <label
                 htmlFor='shortcode'
-                className='block text-sm font-medium leading-6 text-white'
+                className='block text-sm font-medium leading-6'
               >
                 Shortcode
               </label>
@@ -123,7 +124,7 @@ export default function AddLink() {
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                     autoComplete='shortcode'
-                    className='flex-1 border-0 bg-transparent py-1.5 pl-1 text-white focus:ring-0 sm:text-sm sm:leading-6'
+                    className='flex-1 border-0 bg-transparent py-1.5 pl-1 focus:ring-0 sm:text-sm sm:leading-6'
                     placeholder='SuperDuperShortCode'
                   />
                 </div>
@@ -165,7 +166,7 @@ export default function AddLink() {
         <button
           type='submit'
           disabled={loading}
-          className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+          className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm ${
             loading
               ? 'bg-gray-500 animate-pulse cursor-not-allowed'
               : 'rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-500 hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'
