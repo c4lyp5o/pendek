@@ -27,9 +27,7 @@ export default function EditLink() {
   const [loading, setLoading] = useState(false);
 
   const url = `/api/pendekmx/${currentCode.split('/links/')[1]}`;
-  const { data: link, error } = useSWR(url, fetcher, {
-    refreshInterval: 1000,
-  });
+  const { data: link, error } = useSWR(url, fetcher);
 
   useEffect(() => {
     const init = async () => {
@@ -68,6 +66,7 @@ export default function EditLink() {
     }
 
     const formData = new FormData();
+
     urls.forEach((url, index) => {
       if (!url.url.startsWith('http://') && !url.url.startsWith('https://')) {
         toast.error(`🚫 Invalid URL: ${url}`);
