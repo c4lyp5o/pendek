@@ -41,6 +41,7 @@ export default function AddLink() {
     }
 
     const formData = new FormData();
+
     urls.forEach((url, index) => {
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         toast.error(`🚫 Invalid URL: ${url}`);
