@@ -27,7 +27,7 @@ export default function LinkCreated({ shortCode, qrCode }) {
             viewBox='0 0 24 24'
             fill='none'
             xmlns='http://www.w3.org/2000/svg'
-            className='w-6 h-6 ml-2 cursor-pointer'
+            className='w-4 h-4 ml-2 cursor-pointer'
             onClick={handleCopy}
           >
             <g id='SVGRepo_bgCarrier' stroke-width='0'></g>
@@ -56,9 +56,8 @@ export default function LinkCreated({ shortCode, qrCode }) {
               ></path>{' '}
             </g>
           </svg>
-        </span>
-        . Please copy this code or save your QR code, it will only be shown
-        once.
+        </span>{' '}
+        Please copy and save your code and QR code, it will only be shown once.
       </span>
       <div className='mt-4 flex justify-center'>
         <Image src={qrCode} width={250} height={250} alt='QR Code' />
