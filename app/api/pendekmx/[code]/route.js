@@ -123,7 +123,7 @@ export async function DELETE(request, context) {
 
     const codeExists = await prisma.code.findUnique({
       where: {
-        code: code,
+        id: id,
         belongsTo: { username: session.username },
       },
     });
