@@ -27,7 +27,7 @@ export default function LinkCreated({ shortCode, qrCode }) {
             viewBox='0 0 24 24'
             fill='none'
             xmlns='http://www.w3.org/2000/svg'
-            className='w-4 h-4 ml-2 cursor-pointer'
+            className='w-3 h-3 ml-1 cursor-pointer'
             onClick={handleCopy}
           >
             <g id='SVGRepo_bgCarrier' stroke-width='0'></g>
