@@ -52,7 +52,8 @@ export async function middleware(request) {
     case request.nextUrl.pathname === '/api/pendek':
       return pendekPathHandler(request);
     case pendekMx.test(request.nextUrl.pathname):
-      return pendekMxPathHandler(request);
+      // return pendekMxPathHandler(request);
+      return NextResponse.next();
     default:
       return NextResponse.next();
   }

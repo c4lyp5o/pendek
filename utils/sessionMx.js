@@ -4,6 +4,7 @@ import useSWRMutation from 'swr/mutation';
 import { defaultSession } from './sessionSecret';
 
 const sessionApiRoute = '/api/usermx';
+// const superadminApiRoute = '/api/superusermx';
 
 async function fetchJson(input, init) {
   const response = await fetch(input, {
@@ -11,9 +12,7 @@ async function fetchJson(input, init) {
   });
 
   if (!response.ok) {
-    const error = new Error('An error occurred while fetching the data.');
-
-    error.info = await response.json();
+    const error = await response.json();
     error.status = response.status;
     throw error;
   }
@@ -48,9 +47,37 @@ export function useSession() {
 
   const { trigger: login } = useSWRMutation(sessionApiRoute, doLogin, {
     revalidate: false,
+    populateCache: true,
   });
 
-  const { trigger: logout } = useSWRMutation(sessionApiRoute, doLogout);
+  const { trigger: logout } = useSWRMutation(sessionApiRoute, doLogout, {
+    revalidate: false,
+    populateCache: true,
+  });
 
-  return { session, login, logout, isLoading };
+  // const { data: sessionSuper, isLoading: isLoadingSuper } = useSWR(
+  //   superadminApiRoute,
+  //   fetchJson,
+  //   {
+  //     fallbackData: { isSuperAdmin: false },
+  //   }
+  // );
+
+  // const { trigger: loginSuper } = useSWRMutation(superadminApiRoute, doLogin, {
+  //   revalidate: false,
+  //   populateCache: true,
+  // });
+
+  // const { trigger: logoutSuper } = useSWRMutation(superadminApiRoute, doLogout);
+
+  return {
+    session,
+    login,
+    logout,
+    // sessionSuper,
+    // loginSuper,
+    // logoutSuper,
+    isLoading,
+    // isLoadingSuper,
+  };
 }

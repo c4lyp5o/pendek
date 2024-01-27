@@ -1,7 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useSession } from '@/utils/sessionMx';
+import { toast } from 'react-toastify';
+
+import LoadingScreenNoThanks from '@/components/loadingScreenNoThanks';
 
 export default function Login() {
   const router = useRouter();
@@ -12,7 +16,6 @@ export default function Login() {
     rememberMe: false,
   });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
 
   const handleChange = (e) => {
     const value =
@@ -24,46 +27,52 @@ export default function Login() {
     e.preventDefault();
 
     if (!formData.username || !formData.password) {
-      setMessage('⚠️ Username and password are required');
+      toast.error('⚠️ Username and password are required');
       return;
     }
 
     setLoading(true);
-    setMessage(null);
 
     try {
-      await login(
-        {
-          username: formData.username,
-          password: formData.password,
-          rememberMe: formData.rememberMe,
-        },
-        {
-          optimisticData: {
-            isLoggedIn: true,
-            username: formData.username,
-          },
-        }
-      );
+      await login({
+        username: formData.username,
+        password: formData.password,
+        rememberMe: formData.rememberMe,
+      });
       router.push('/dashboard');
     } catch (error) {
-      setMessage(`😢 Oops! Something went wrong: ${error.message}`);
-    } finally {
+      toast.error(`😢 Oops! ${error.message}`);
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (session.isLoggedIn && !isLoading) {
-      router.push('/dashboard');
-    }
+    if (!isLoading && session.isLoggedIn) router.push('/dashboard');
   }, [session, isLoading, router]);
 
-  if (isLoading) return null;
+  if (isLoading) return <LoadingScreenNoThanks />;
 
   return (
-    <div className='flex items-center justify-center h-screen bg-black'>
+    <div className='p-4 sm:p-0 flex items-center justify-center h-screen'>
       <div className='p-10 bg-white rounded shadow-2xl w-96'>
+        <Link href='/'>
+          <p className='absolute top-3 left-3 dark:border-gray-300 border-gray-600'>
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              fill='none'
+              viewBox='0 0 24 24'
+              stroke='currentColor'
+              className='h-8 w-8'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M15 19l-7-7 7-7'
+              />
+            </svg>
+          </p>
+        </Link>
         <h2 className='text-3xl font-bold mb-10 text-gray-800 text-center'>
           Log In
         </h2>
@@ -83,7 +92,7 @@ export default function Login() {
               onChange={handleChange}
               className='w-full px-4 py-2 border rounded-md text-black'
             />
-            <label className='flex items-center text-black'>
+            {/* <label className='flex items-center text-black'>
               <input
                 type='checkbox'
                 name='rememberMe'
@@ -91,43 +100,19 @@ export default function Login() {
                 className='mr-2'
               />
               Remember Me
-            </label>
+            </label> */}
           </div>
           <button
             type='submit'
             disabled={loading}
-            className={`w-full mt-6 px-4 py-2 rounded-md ${
+            className={`w-full mt-6 px-4 py-2 rounded-md text-white ${
               loading
-                ? 'bg-gray-500 cursor-not-allowed'
-                : 'text-white bg-blue-500 hover:bg-blue-600'
+                ? 'bg-gray-500 animate-pulse cursor-not-allowed'
+                : 'bg-indigo-500 hover:bg-indigo-400'
             }`}
           >
-            {loading ? (
-              <svg
-                className='animate-spin h-5 w-5 text-white'
-                xmlns='http://www.w3.org/2000/svg'
-                fill='none'
-                viewBox='0 0 24 24'
-              >
-                <circle
-                  className='opacity-25'
-                  cx='12'
-                  cy='12'
-                  r='10'
-                  stroke='currentColor'
-                  strokeWidth='4'
-                ></circle>
-                <path
-                  className='opacity-75'
-                  fill='currentColor'
-                  d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                ></path>
-              </svg>
-            ) : (
-              'Proceed'
-            )}
+            Proceed
           </button>
-          {message && <p className='text-red-500 mt-3'>{message}</p>}
         </form>
       </div>
     </div>

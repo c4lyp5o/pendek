@@ -6,9 +6,9 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'B R G P D K',
+  title: 'P E N D E K . I N G',
   description:
-    'BRGPDK is a simple and efficient URL shortener built with Next.js and Prisma.',
+    'PENDEK.ING is a simple and efficient URL shortener. Made in Malaysia.',
 };
 
 export const viewport = {
@@ -19,8 +19,21 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang='en'>
-      <body className={inter.className}>{children}</body>
-      <ToastContainer />
+      <body className={inter.className}>
+        {children}
+        <ToastContainer
+          position='top-center'
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme='light'
+        />
+      </body>
     </html>
   );
 }

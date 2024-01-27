@@ -9,40 +9,100 @@ export default function UrlInput({
   index,
 }) {
   return (
-    <div key={index} className='flex items-center border-b border-black py-2'>
-      <input
-        className='appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none'
-        type='url'
-        placeholder='Enter URL'
-        value={url || ''}
-        onChange={(e) => updateUrl(index, e.target.value)}
-        required
-      />
-      <input
-        className='ml-3 appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none'
-        type='text'
-        placeholder='Site Tag'
-        value={tag || ''}
-        onChange={(e) => updateTag(index, e.target.value)}
-      />
-      {index === urls.length - 1 && (
-        <button
-          type='button'
-          onClick={addUrlInput}
-          className='ml-2 bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded'
-        >
-          +
-        </button>
-      )}
-      {urls.length > 1 && (
-        <button
-          type='button'
-          onClick={() => removeUrlInput(index)}
-          className='ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded'
-        >
-          -
-        </button>
-      )}
-    </div>
+    <ul role='list' className='divide-y divide-gray-800'>
+      <li key={index} className='flex justify-between gap-x-6 py-5'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+          <div>
+            <label
+              htmlFor='url'
+              className='block text-sm font-medium leading-6'
+            >
+              URL
+            </label>
+            <div className='mt-2'>
+              <input
+                type='url'
+                name='url'
+                id='url'
+                value={url || ''}
+                onChange={(e) => updateUrl(index, e.target.value)}
+                className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+                placeholder='Example: https://www.google.com'
+              />
+            </div>
+          </div>
+          <div>
+            <div className='flex justify-between'>
+              <label
+                htmlFor='tag'
+                className='block text-sm font-medium leading-6'
+              >
+                Site Tag
+              </label>
+              <span
+                className='text-sm leading-6 text-gray-500'
+                id='tag-optional'
+              >
+                Optional
+              </span>
+            </div>
+            <div className='mt-2'>
+              <input
+                type='tag'
+                name='tag'
+                id='tag'
+                value={tag || ''}
+                onChange={(e) => updateTag(index, e.target.value)}
+                className='block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+                placeholder='Example: Google'
+                aria-describedby='tag-optional'
+              />
+            </div>
+          </div>
+        </div>
+        <div className='flex flex-col items-end space-y-4'>
+          {index === urls.length - 1 && (
+            <button
+              type='button'
+              onClick={addUrlInput}
+              className='text-sm leading-6 border border-1 rounded-md dark:border-gray-300 border-gray-600'
+            >
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                viewBox='0 0 24 24'
+                fill='currentColor'
+                className='w-6 h-6'
+              >
+                <path
+                  fillRule='evenodd'
+                  d='M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z'
+                  clipRule='evenodd'
+                />
+              </svg>
+            </button>
+          )}
+          {urls.length > 1 && (
+            <button
+              type='button'
+              onClick={() => removeUrlInput(index)}
+              className='text-sm leading-6 border border-1 rounded-md dark:border-gray-300 border-gray-600'
+            >
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                viewBox='0 0 24 24'
+                fill='currentColor'
+                className='w-6 h-6'
+              >
+                <path
+                  fillRule='evenodd'
+                  d='M3.75 12a.75.75 0 01.75-.75h15a.75.75 0 010 1.5h-15a.75.75 0 01-.75-.75z'
+                  clipRule='evenodd'
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+      </li>
+    </ul>
   );
 }

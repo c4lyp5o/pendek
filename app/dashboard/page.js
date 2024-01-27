@@ -1,12 +1,12 @@
 'use client';
 import { useSession } from '@/utils/sessionMx';
 
-import LoadingScreen from '@/components/loadingScreen';
+import LoadingScreenNoThanks from '@/components/loadingScreenNoThanks';
 
 export default function Dashboard() {
-  const { isLoading, session } = useSession();
+  const { session, isLoading } = useSession();
 
-  if (isLoading) return <LoadingScreen />;
+  if (isLoading) return <LoadingScreenNoThanks />;
 
   return (
     <>
