@@ -27,8 +27,6 @@ export async function GET(request) {
     return Response.json(shortlinkUrls);
   } catch (error) {
     return Response.json({ message: error.message }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -65,7 +63,5 @@ export async function POST(request) {
     return Response.json(shortlink);
   } catch (error) {
     return Response.json({ message: error.message }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

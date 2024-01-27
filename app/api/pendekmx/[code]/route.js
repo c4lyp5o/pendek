@@ -29,8 +29,6 @@ export async function GET(request, context) {
     return Response.json(singleCode);
   } catch (error) {
     return Response.json({ message: 'Failed to get code' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -102,8 +100,6 @@ export async function PATCH(request, context) {
     return Response.json({ message: 'Link updated' });
   } catch (error) {
     return Response.json({ message: error.message }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -152,7 +148,5 @@ export async function DELETE(request, context) {
       { message: 'Failed to delete shortlink' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

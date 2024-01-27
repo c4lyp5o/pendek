@@ -44,7 +44,5 @@ export async function POST(request) {
     return Response.json({ message: 'User created' });
   } catch (error) {
     return Response.json({ message: 'Failed to create user' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
