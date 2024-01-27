@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-export default function SuccessMessage({ shortCode, qrCode }) {
+export default function LinkCreated({ shortCode, qrCode }) {
   const handleCopy = () => {
     navigator.clipboard.writeText(`${window.location.origin}/${shortCode}`);
   };
