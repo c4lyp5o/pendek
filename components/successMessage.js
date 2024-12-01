@@ -1,7 +1,9 @@
 import Image from 'next/image';
+import { toast } from 'react-toastify';
 
 export default function SuccessMessage({ shortCode, qrCode }) {
   const handleCopy = () => {
+    toast.success('👏 Link copied to clipboard');
     navigator.clipboard.writeText(`${window.location.origin}/${shortCode}`);
   };
 
@@ -10,7 +12,7 @@ export default function SuccessMessage({ shortCode, qrCode }) {
       className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-7 text-center'
       role='alert'
     >
-      <strong className='font-bold'>Important!</strong>
+      <strong className='font-bold'>Important! </strong>
       <span className='block sm:inline'>
         Your short URL is:{' '}
         <span className='flex items-center justify-center'>
