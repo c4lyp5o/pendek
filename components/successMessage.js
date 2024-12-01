@@ -40,8 +40,7 @@ export default function SuccessMessage({ shortCode, qrCode }) {
             />
           </svg>
         </span>
-        . Please copy this code or save your QR code, it will only be shown
-        once.
+        Please copy this code or save your QR code, it will only be shown once.
       </span>
       <div className='mt-4 flex justify-center'>
         <Image src={qrCode} width={250} height={250} alt='QR Code' />
