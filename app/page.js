@@ -5,15 +5,15 @@ import QRCode from 'qrcode';
 import { toast } from 'react-toastify';
 
 import UrlInput from '@/components/urlInput';
-import LinkCreated from '@/components/linkCreated';
+import SuccessMessage from '@/components/successMessage';
 
 export default function Home() {
   const [urls, setUrls] = useState(['']);
   const [tags, setTags] = useState(['']);
   const [shortCode, setShortCode] = useState('');
   const [qrCode, setQrCode] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(false);
 
   const reset = () => {
     setUrls(['']);
@@ -40,7 +40,7 @@ export default function Home() {
 
     try {
       setLoading(true);
-      setMessage(false);
+      setSuccessMessage(false);
 
       const response = await fetch('/api/pendek', {
         method: 'POST',
@@ -53,7 +53,6 @@ export default function Home() {
       }
 
       const shortLink = await response.json();
-
       const qrCode = await QRCode.toDataURL(
         `${window.location.origin}/${shortLink.code}`
       );
@@ -62,7 +61,7 @@ export default function Home() {
       setQrCode(qrCode);
 
       toast.success(`👏 Link creation succeeded.`);
-      setMessage(true);
+      setSuccessMessage(true);
 
       reset();
     } catch (error) {
@@ -136,7 +135,9 @@ export default function Home() {
           Shorten
         </button>
       </form>
-      {message && <LinkCreated shortCode={shortCode} qrCode={qrCode} />}
+      {successMessage && (
+        <SuccessMessage shortCode={shortCode} qrCode={qrCode} />
+      )}
     </div>
   );
 }
