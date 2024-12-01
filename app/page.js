@@ -14,13 +14,10 @@ export default function Home() {
   const [qrCode, setQrCode] = useState(null);
   const [successMessage, setSuccessMessage] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(false);
 
   const reset = () => {
     setUrls(['']);
     setTags(['']);
-    setShortCode('');
-    setQrCode(null);
   };
 
   const handleSubmit = async (event) => {
