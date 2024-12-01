@@ -13,10 +13,7 @@ export default function Links() {
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = useSWR(
     `/api/pendekmx/getall?page=${page}`,
-    fetcher,
-    {
-      refreshInterval: 1000,
-    }
+    fetcher
   );
   const totalPages = Math.ceil(data?.totalCodes / 10);
 
@@ -33,7 +30,7 @@ export default function Links() {
       <div className='flex justify-between items-center mb-4'>
         <h1 className='text-base font-semibold leading-7'>Your Links</h1>
         <Link href='/dashboard/links/create'>
-          <button className='inline-flex text-white items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'>
+          <button className='inline-flex text-white items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm bg-indigo-500 hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'>
             Create
           </button>
         </Link>
