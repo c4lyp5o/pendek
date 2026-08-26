@@ -10,6 +10,12 @@ export const config = {
 	postgresUrl: process.env.POSTGRES_URL,
 	// app
 	baseUrl: process.env.BASE_URL || "http://localhost:5000",
+	// Comma-separated hosts allowed to appear in generated short URLs
+	// (Host header allowlist). Any other Host falls back to baseUrl.
+	allowedHosts: (process.env.ALLOWED_HOSTS || "")
+		.split(",")
+		.map((h) => h.trim().toLowerCase())
+		.filter(Boolean),
 	codeAlphabet:
 		process.env.CODE_ALPHABET || "23456789abcdefghijkmnpqrstuvwxyz",
 	codeLength: Number(process.env.CODE_LENGTH) || 6,

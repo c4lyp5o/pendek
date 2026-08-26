@@ -35,7 +35,7 @@ export function sanitizeCode(raw) {
 	const code = raw.trim();
 	if (code.length < 4 || code.length > 25) return null;
 	if (!/^[a-zA-Z0-9]+$/.test(code)) return null; // alphanumeric only
-	if (/^(dashboard|login|signup|api|pendingka|settings)$/i.test(code)) {
+	if (/^(dashboard|login|signup|api|error|pendingka|settings)$/i.test(code)) {
 		return null; // reserved words
 	}
 	return code;

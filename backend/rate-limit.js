@@ -1,7 +1,15 @@
 // Simple in-memory fixed-window rate limiter, keyed per client IP.
 // Good enough for a single-process homelab app. Swap for Redis if you scale.
 
-const buckets = new Map();
+// Shared per-window store: name -> Map(ip -> bucket). Each rateLimit() call
+// gets its own scope so login/signup/create don't share quota.
+const stores = new Map();
+
+function storeFor(scope) {
+	let m = stores.get(scope);
+	if (!m) stores.set(scope, (m = new Map()));
+	return m;
+}
 
 function keyFor(c) {
 	const fwd = c?.request?.headers?.get?.("x-forwarded-for");
@@ -16,7 +24,13 @@ function keyFor(c) {
 	return ip || "unknown";
 }
 
-export function rateLimit({ windowMs = 60_000, max = 100 } = {}) {
+/**
+ * Elysia beforeHandle hook. Returning a response from a beforeHandle hook
+ * SHORT-CIRCUITS the pipeline — the wrapped handler never runs — so the
+ * limiter only needs to return a 429 to fully block the request.
+ */
+export function rateLimit({ windowMs = 60_000, max = 100, scope = "default" } = {}) {
+	const buckets = storeFor(scope);
 	return async function (c) {
 		const key = keyFor(c);
 		const now = Date.now();
@@ -24,7 +38,7 @@ export function rateLimit({ windowMs = 60_000, max = 100 } = {}) {
 
 		if (!bucket || bucket.resetAt <= now) {
 			buckets.set(key, { count: 1, resetAt: now + windowMs });
-			return;
+			return; // under limit -> proceed to handler
 		}
 
 		bucket.count += 1;
@@ -35,7 +49,8 @@ export function rateLimit({ windowMs = 60_000, max = 100 } = {}) {
 					if (v.resetAt <= Date.now()) buckets.delete(k);
 				}
 			}
-			return c.redirect(`/error?reason=rate`); // handled by SPA
+			c.set.status = 429;
+			return { message: "Too many requests, slow down" };
 		}
 	};
 }

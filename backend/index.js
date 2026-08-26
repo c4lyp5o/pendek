@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { existsSync } from "node:fs";
 import bcrypt from "bcryptjs";
-import { nanoid } from "nanoid";
+import { customAlphabet } from "nanoid";
 
 import { config, sessionOptions } from "./config.js";
 import { prisma } from "./db.js";
@@ -38,6 +38,25 @@ async function loadCode(code) {
 function invalidateCode(code) {
 	redirectCache.del(code);
 	negativeCache.del(code);
+}
+
+// Auto short-code generator honoring config alphabet/length.
+const generateCode = customAlphabet(config.codeAlphabet, config.codeLength);
+
+// Create a Code row with an auto-generated code, retrying on the rare
+// unique-collision instead of letting Prisma's P2002 bubble to a 500.
+async function createCodeRow(buildData, attempts = 5) {
+	for (let i = 0; i < attempts; i++) {
+		const code = generateCode();
+		try {
+			const record = await prisma.code.create({ data: buildData(code) });
+			return { code, record };
+		} catch (e) {
+			if (e?.code === "P2002") continue; // collision -> fresh code
+			throw e;
+		}
+	}
+	throw new Error("Could not allocate a unique short code");
 }
 
 const app = new Elysia()
@@ -126,21 +145,18 @@ app.post(
 			return { message: "At least one valid URL required" };
 		}
 
-		const code = nanoid(6);
 		const tags = Array.isArray(body?.tags) ? body.tags : [];
 
-		const record = await prisma.code.create({
-			data: {
-				code,
-				isMultiple: cleaned.length > 1,
-				urls: {
-					create: cleaned.map((u, i) => ({
-						url: u,
-						tag: typeof tags[i] === "string" && tags[i] ? tags[i] : null,
-					})),
-				},
+		const { code } = await createCodeRow((code) => ({
+			code,
+			isMultiple: cleaned.length > 1,
+			urls: {
+				create: cleaned.map((u, i) => ({
+					url: u,
+					tag: typeof tags[i] === "string" && tags[i] ? tags[i] : null,
+				})),
 			},
-		});
+		}));
 
 		return {
 			code,
@@ -149,7 +165,7 @@ app.post(
 	},
 	// hooks (third positional arg) — rate limit public create
 	{
-		beforeHandle: [rateLimit({ windowMs: 60_000, max: 15 })],
+		beforeHandle: [rateLimit({ windowMs: 60_000, max: 15, scope: "create" })],
 	}
 );
 
@@ -165,7 +181,17 @@ app
 			userId: session?.userId || null,
 		};
 	})
-	.post("/api/auth/signup", async ({ body, set }) => {
+	.post(
+		"/api/auth/signup",
+		async ({ body, set }) => {
+		if (config.disableAutoCreate) {
+			set.status = 403;
+			return { message: "Signups are disabled" };
+		}
+		// Honeypot: real users never fill this hidden field; bots do.
+		if (body?.[config.honeypotField]) {
+			return { message: "Account created" }; // lie to the bot
+		}
 		const { username, password } = body || {};
 		if (
 			!username ||
@@ -190,13 +216,18 @@ app
 			return { message: "That username can't be used" };
 		}
 
-		const hash = await bcrypt.hash(String(password), 12);
-		await prisma.user.create({
-			data: { username: String(username), password: hash },
-		});
-		return { message: "Account created" };
-	})
-	.post("/api/auth/login", async (c) => {
+			const hash = await bcrypt.hash(String(password), 12);
+			await prisma.user.create({
+				data: { username: String(username), password: hash },
+			});
+			return { message: "Account created" };
+		},
+		// Honeypot + signup throttling: 5/min/IP keeps bulk account farming down.
+		{ beforeHandle: [rateLimit({ windowMs: 60_000, max: 5, scope: "signup" })] }
+	)
+	.post(
+		"/api/auth/login",
+		async (c) => {
 		const { set, body } = c;
 		const { username, password } = body || {};
 		if (!username || !password) {
@@ -224,12 +255,16 @@ app
 		session.loginTime = Date.now();
 		await session.save();
 
-		return {
-			message: "Logged in",
-			username: user.username,
-			userId: user.id,
-		};
-	})
+			return {
+				message: "Logged in",
+				username: user.username,
+				userId: user.id,
+			};
+		},
+		// Brute-force throttle: 10 login attempts/min/IP (constant-time compare
+		// alone doesn't stop credential stuffing).
+		{ beforeHandle: [rateLimit({ windowMs: 60_000, max: 10, scope: "login" })] }
+	)
 	.post("/api/auth/logout", async (c) => {
 		const session = await getSession(c);
 		if (session) {
@@ -242,23 +277,23 @@ app
 /* ------------------------------------------------------------------ */
 /* Authed link management                                             */
 /* ------------------------------------------------------------------ */
-const authed = new Elysia({ prefix: "/api/links" }).derive(async (c) => {
-	const session = await getSession(c);
-	const user = await requireLogin(session);
-	if (!user) {
-		c.set.status = 401;
-		return { authedUser: null };
-	}
-	return { authedUser: user };
-});
-
-authed
-	.post("/create", async ({ body, set, authedUser, request }) => {
+const authed = new Elysia({ prefix: "/api/links" })
+	.derive(async (c) => {
+		const session = await getSession(c);
+		return { authedUser: await requireLogin(session) };
+	})
+	// Guard runs before every /api/links handler: derive alone does NOT halt
+	// the pipeline in Elysia, and a null authedUser previously left handlers
+	// querying with userId: undefined ("no filter") — a full auth bypass.
+	.onBeforeHandle(({ authedUser, set }) => {
 		if (!authedUser) {
 			set.status = 401;
 			return { message: "Not logged in" };
 		}
+	});
 
+authed
+	.post("/create", async ({ body, set, authedUser, request }) => {
 		let { code, urls, tags } = body || {};
 		if (typeof code === "string" && code.trim()) {
 			code = sanitizeCode(code);
@@ -284,37 +319,44 @@ authed
 			cleaned.push(s);
 		}
 
-		const finalCode = code || nanoid(6);
+		const tagsArr = Array.isArray(tags) ? tags : [];
+		const buildData = (c) => ({
+			code: c,
+			isMultiple: cleaned.length > 1,
+			belongsTo: { connect: { id: authedUser.userId } },
+			urls: {
+				create: cleaned.map((u, i) => ({
+					url: u,
+					tag: typeof tagsArr[i] === "string" && tagsArr[i] ? tagsArr[i] : null,
+				})),
+			},
+		});
+		let finalCode;
 		if (code) {
+			// Custom code: check once, then insert via the same collision-safe path
+			// so a race between the check and the insert still can't 500.
 			const taken = await prisma.code.findUnique({ where: { code } });
 			if (taken) {
 				set.status = 400;
 				return { message: "That code is already taken" };
 			}
+			try {
+				await prisma.code.create({ data: buildData(code) });
+			} catch (e) {
+				if (e?.code === "P2002") {
+					set.status = 400;
+					return { message: "That code is already taken" };
+				}
+				throw e;
+			}
+			finalCode = code;
+		} else {
+			finalCode = (await createCodeRow(buildData)).code;
 		}
-
-		const tagsArr = Array.isArray(tags) ? tags : [];
-		const record = await prisma.code.create({
-			data: {
-				code: finalCode,
-				isMultiple: cleaned.length > 1,
-				belongsTo: { connect: { id: authedUser.userId } },
-				urls: {
-					create: cleaned.map((u, i) => ({
-						url: u,
-						tag: typeof tagsArr[i] === "string" && tagsArr[i] ? tagsArr[i] : null,
-					})),
-				},
-			},
-		});
 		invalidateCode(finalCode);
 		return { code: finalCode, shortUrl: `${originFor(request)}/${finalCode}` };
 	})
-	.get("/", async ({ query, set, authedUser }) => {
-		if (!authedUser) {
-			set.status = 401;
-			return { message: "Not logged in" };
-		}
+	.get("/", async ({ query, authedUser }) => {
 		const page = Math.max(1, Number(query?.page) || 1);
 		const pageSize = Math.min(50, Math.max(1, Number(query?.pageSize) || 10));
 		const skip = pageSize * (page - 1);
@@ -382,18 +424,30 @@ authed
 				cleaned.push(s);
 			}
 			const tagsArr = Array.isArray(tags) ? tags : [];
-			await prisma.url.deleteMany({ where: { codeId: id } });
-			await Promise.all(
-				cleaned.map((u, i) =>
-					prisma.url.create({
-						data: {
-							codeId: id,
-							url: u,
-							tag: typeof tagsArr[i] === "string" && tagsArr[i] ? tagsArr[i] : null,
-						},
-					})
-				)
-			);
+			// URL replace + code rename must be atomic: a crash between deleteMany
+			// and create would otherwise leave the link with zero URLs.
+			const updated = await prisma.$transaction(async (tx) => {
+				await tx.url.deleteMany({ where: { codeId: id } });
+				await Promise.all(
+					cleaned.map((u, i) =>
+						tx.url.create({
+							data: {
+								codeId: id,
+								url: u,
+								tag: typeof tagsArr[i] === "string" && tagsArr[i] ? tagsArr[i] : null,
+							},
+						})
+					)
+				);
+				return tx.code.update({
+					where: { id },
+					data: { code },
+					include: { urls: true },
+				});
+			});
+			invalidateCode(row.code);
+			invalidateCode(updated.code);
+			return updated;
 		}
 
 		const updated = await prisma.code.update({
@@ -432,8 +486,19 @@ const SPA_INDEX = new URL("../frontend/dist/index.html", import.meta.url);
 function originFor(request, set) {
 	const host = request?.headers?.get?.("host");
 	if (host) {
-		const proto = request.headers.get("x-forwarded-proto") || "http";
-		return `${proto}://${host}`;
+		const h = host.toLowerCase();
+		// Host header is attacker-controlled: only echo known hosts, otherwise
+		// fall back to the configured base URL (prevents link-spoofing).
+		// Default allowlist = the baseUrl's own host + common LAN/loopback.
+		const baseHost = new URL(config.baseUrl).host.toLowerCase();
+		const allowed =
+			h === baseHost ||
+			config.allowedHosts.includes(h) ||
+			/^(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/.test(h);
+		if (allowed) {
+			const proto = request.headers.get("x-forwarded-proto") || "http";
+			return `${proto}://${host}`;
+		}
 	}
 	return config.baseUrl;
 }
