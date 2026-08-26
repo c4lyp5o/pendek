@@ -1,0 +1,27 @@
+{
+	"name": "pendek-backend",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "bun --watch index.js",
+		"start": "bun index.js",
+		"test": "bun test",
+		"db:generate": "bun prisma generate",
+		"db:migrate": "bun prisma migrate deploy",
+		"db:push": "bun prisma db push"
+	},
+	"dependencies": {
+		"@elysiajs/static": "^1.1.0",
+		"@prisma/client": "^5.22.0",
+		"bcryptjs": "^2.4.3",
+		"cookie": "0.7.2",
+		"elysia": "^1.1.0",
+		"iron-session": "^8.0.2",
+		"nanoid": "^5.0.7",
+		"prisma": "^5.22.0"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.1.0"
+	}
+}

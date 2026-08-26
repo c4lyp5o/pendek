@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+/* Class-based dark mode (default ON). The .dark class flips tokens. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   pendek design tokens — minimal dark-first, low-chrome dev tool
+   Layered surfaces • hairline borders • one accent
+   :root = LIGHT baseline; .dark overrides up one level.
+   ============================================================ */
+
+/* ---- LIGHT tokens (default) ---- */
+@theme {
+	--color-bg: #f7f7f8; /* page floor */
+	--color-surface: #ffffff; /* raised panel */
+	--color-raised: #f1f2f4; /* card / interactive bg */
+	--color-raised-hover: #e9ebee; /* hover elevation */
+
+	--color-line: rgb(0 0 0 / 0.08); /* hairline border */
+	--color-line-strong: rgb(0 0 0 / 0.14);
+
+	/* text */
+	--color-ink: #111418; /* primary text */
+	--color-dim: #4b5563; /* secondary */
+	--color-mute: #8a919c; /* tertiary / placeholders */
+
+	/* the one accent (slightly deeper on light for text contrast) */
+	--color-accent: #5b66f0;
+	--color-accent-hover: #6b77f2;
+	--color-accent-dim: rgb(91 102 240 / 0.12);
+
+	/* semantic */
+	--color-danger: #dc4444;
+	--color-ok: #12a96e;
+
+	/* type */
+	--font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+	--font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+	/* radius: restrained. 6 functional / 10 cards / 14 dialogs */
+	--radius-sm: 0.375rem;
+	--radius-md: 0.5rem;
+	--radius-lg: 0.625rem;
+	--radius-xl: 0.875rem;
+}
+
+/* ---- DARK tokens (the default experience) ---- */
+.dark {
+	--color-bg: #08090b;
+	--color-surface: #0d0f12;
+	--color-raised: #12151a;
+	--color-raised-hover: #171b21;
+
+	--color-line: rgb(255 255 255 / 0.06);
+	--color-line-strong: rgb(255 255 255 / 0.12);
+
+	--color-ink: #f4f5f7;
+	--color-dim: #a7adb8;
+	--color-mute: #6b7280;
+
+	--color-accent: #7c86ff;
+	--color-accent-hover: #939cff;
+	--color-accent-dim: rgb(124 134 255 / 0.14);
+
+	--color-danger: #f26060;
+	--color-ok: #3ecf8e;
+}
+
+/* ---- base ---- */
+html {
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+body {
+	color: var(--color-ink);
+	background: var(--color-bg);
+	font-family: var(--font-sans);
+	font-feature-settings: "cv11", "ss01";
+	letter-spacing: -0.011em;
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* code / shortcodes — let identifiers read as "code" */
+code,
+.short {
+	font-family: var(--font-mono);
+	font-feature-settings: "cv02", "cv03";
+	letter-spacing: -0.01em;
+}
+
+/* ---- shared hairline helpers ---- */
+.hairline {
+	border: 1px solid var(--color-line);
+}
+.hairline-t {
+	border-top: 1px solid var(--color-line);
+}
+
+/* ---- buttons (primary) ---- */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.875rem;
+	border-radius: var(--radius-md);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	line-height: 1.25rem;
+	letter-spacing: -0.005em;
+	white-space: nowrap;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease,
+		color 0.15s ease, box-shadow 0.15s ease;
+}
+.btn:focus-visible {
+	outline: 2px solid var(--color-accent);
+	outline-offset: 2px;
+}
+
+.btn-primary {
+	background: var(--color-accent);
+	color: #fff;
+}
+.btn-primary:hover {
+	background: var(--color-accent-hover);
+}
+.btn-primary:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* secondary / ghost button */
+.btn-ghost {
+	background: transparent;
+	color: var(--color-dim);
+	border: 1px solid var(--color-line);
+}
+.btn-ghost:hover {
+	background: var(--color-raised);
+	color: var(--color-ink);
+	border-color: var(--color-line-strong);
+}
+
+.btn-secondary {
+	background: var(--color-raised);
+	color: var(--color-ink);
+	border: 1px solid var(--color-line);
+}
+.btn-secondary:hover {
+	background: var(--color-raised-hover);
+	border-color: var(--color-line-strong);
+}
+
+.btn-danger {
+	background: var(--color-danger);
+	color: #fff;
+}
+.btn-danger:hover {
+	filter: brightness(1.08);
+}
+.btn-danger:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* ---- inputs ---- */
+.input {
+	width: 100%;
+	background: var(--color-surface);
+	color: var(--color-ink);
+	border: 1px solid var(--color-line);
+	border-radius: var(--radius-md);
+	padding: 0.5rem 0.75rem;
+	font-size: 0.8125rem;
+	line-height: 1.25rem;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input::placeholder {
+	color: var(--color-mute);
+}
+.input:focus {
+	outline: none;
+	border-color: var(--color-accent);
+	box-shadow: 0 0 0 3px var(--color-accent-dim);
+}
+
+/* ---- labels ---- */
+.label {
+	display: block;
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--color-dim);
+	margin-bottom: 0.375rem;
+	letter-spacing: 0.005em;
+}
+
+/* ---- toast override: low-chrome, matches tokens ---- */
+:root {
+	--toastify-color-light: #fff;
+	--toastify-color-dark: var(--color-raised);
+	--toastify-color-info: var(--color-accent);
+	--toastify-color-success: var(--color-ok);
+	--toastify-color-warning: #e0a12e;
+	--toastify-color-error: var(--color-danger);
+	--toastify-text-color-dark: var(--color-ink);
+	--toastify-color-progress-dark: var(--color-accent);
+}
+
+/* respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

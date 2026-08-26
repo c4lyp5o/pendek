@@ -1,47 +1,31 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# deps
+node_modules/
+**/node_modules/
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
-.swc
+# build output
+frontend/dist/
+.next/
+out/
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
+# env — never commit secrets
 .env
+.env*.local
+.env.example
 
-# vercel
+# prisma
+prisma/migrations/**/migration_lock.toml
+*.db
+*.db-journal
+
+# misc
+.DS_Store
+coverage/
+*.pem
 .vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# migrations
-prisma/migrations
-
-# db
-db/*
-
-# test folder
-tests
