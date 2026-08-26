@@ -60,6 +60,20 @@ async function createCodeRow(buildData, attempts = 5) {
 }
 
 const app = new Elysia()
+	// Baseline browser security headers on every response (API + SPA + assets).
+	// Note: HSTS omitted deliberately — homelab serves plain HTTP on LAN; add
+	// it at the TLS-terminating proxy (Traefik) instead.
+	.onAfterHandle(({ set }) => {
+		const h = {
+			"X-Content-Type-Options": "nosniff",
+			"X-Frame-Options": "DENY",
+			"Referrer-Policy": "strict-origin-when-cross-origin",
+			"Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+			"Content-Security-Policy":
+				"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'",
+		};
+		set.headers = { ...h, ...(set.headers || {}) };
+	})
 	.onError(({ code, error, set }) => {
 		console.error(`[error] ${code}:`, error?.stack || error?.message || error);
 		set.status = code === "VALIDATION" ? 400 : 500;
