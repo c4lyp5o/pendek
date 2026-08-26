@@ -51,10 +51,18 @@ export async function requireLogin(session) {
 	if (config.idleRequiresLogout && session.loginTime) {
 		const elapsed = Date.now() - session.loginTime;
 		if (elapsed > config.logoutTime * 1000) {
-			session.destroy();
+			await session.destroy();
 			return null;
 		}
 	}
+
+	return session;
+}
+
+/** Returns the session if the user is a superadmin, else null. */
+export function requireSuperadmin(session) {
+	if (!session || session.isLoggedIn !== true) return null;
+	if (session.role !== "superadmin") return null;
 	return session;
 }
 

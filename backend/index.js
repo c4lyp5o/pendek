@@ -5,7 +5,7 @@ import { customAlphabet } from "nanoid";
 
 import { config, sessionOptions } from "./config.js";
 import { prisma } from "./db.js";
-import { getSession, requireLogin } from "./auth.js";
+import { getSession, requireLogin, requireSuperadmin } from "./auth.js";
 import { sanitizeUrl, sanitizeCode, isBlockedUrl } from "./validate.js";
 import { rateLimit, keyFor } from "./rate-limit.js";
 import {
@@ -193,52 +193,10 @@ app
 			isLoggedIn: !!session?.isLoggedIn,
 			username: session?.username || "",
 			userId: session?.userId || null,
+			role: session?.role || "user",
 		};
 	})
-	.post(
-		"/api/auth/signup",
-		async ({ body, set }) => {
-		if (config.disableAutoCreate) {
-			set.status = 403;
-			return { message: "Signups are disabled" };
-		}
-		// Honeypot: real users never fill this hidden field; bots do.
-		if (body?.[config.honeypotField]) {
-			return { message: "Account created" }; // lie to the bot
-		}
-		const { username, password } = body || {};
-		if (
-			!username ||
-			!password ||
-			String(username).length > 30 ||
-			!/^[a-zA-Z0-9_]+$/.test(String(username))
-		) {
-			set.status = 400;
-			return { message: "Invalid username or password" };
-		}
-		if (String(password).length < 8) {
-			set.status = 400;
-			return { message: "Password must be at least 8 characters" };
-		}
-
-		const existing = await prisma.user.findUnique({
-			where: { username: String(username) },
-		});
-		// Generic message to avoid username enumeration.
-		if (existing) {
-			set.status = 400;
-			return { message: "That username can't be used" };
-		}
-
-			const hash = await bcrypt.hash(String(password), 12);
-			await prisma.user.create({
-				data: { username: String(username), password: hash },
-			});
-			return { message: "Account created" };
-		},
-		// Honeypot + signup throttling: 5/min/IP keeps bulk account farming down.
-		{ beforeHandle: [rateLimit({ windowMs: 60_000, max: 5, scope: "signup" })] }
-	)
+	/* Public signup removed — user creation is now superadmin-only via /api/admin/users */
 	.post(
 		"/api/auth/login",
 		async (c) => {
@@ -265,16 +223,18 @@ app
 		}
 
 		const session = await getSession(c);
-		session.isLoggedIn = true;
-		session.username = user.username;
-		session.userId = user.id;
-		session.loginTime = Date.now();
-		await session.save();
+			session.isLoggedIn = true;
+			session.username = user.username;
+			session.userId = user.id;
+			session.role = user.role;
+			session.loginTime = Date.now();
+			await session.save();
 
 			return {
 				message: "Logged in",
 				username: user.username,
 				userId: user.id,
+				role: user.role,
 			};
 		},
 		// Brute-force throttle: 10 login attempts/min/IP (constant-time compare
@@ -291,20 +251,22 @@ app
 	});
 
 /* ------------------------------------------------------------------ */
-/* Authed link management                                             */
+/* Authed link management (regular users only; superadmin gets 403)  */
 /* ------------------------------------------------------------------ */
 const authed = new Elysia({ prefix: "/api/links" })
 	.derive(async (c) => {
 		const session = await getSession(c);
 		return { authedUser: await requireLogin(session) };
 	})
-	// Guard runs before every /api/links handler: derive alone does NOT halt
-	// the pipeline in Elysia, and a null authedUser previously left handlers
-	// querying with userId: undefined ("no filter") — a full auth bypass.
+	// Guard: must be logged in AND not a superadmin (superadmin manages users, not links).
 	.onBeforeHandle(({ authedUser, set }) => {
 		if (!authedUser) {
 			set.status = 401;
 			return { message: "Not logged in" };
+		}
+		if (authedUser.role === "superadmin") {
+			set.status = 403;
+			return { message: "Superadmin accounts cannot manage links" };
 		}
 	});
 
@@ -491,6 +453,159 @@ authed
 	});
 
 app.use(authed);
+
+/* ------------------------------------------------------------------ */
+/* Superadmin user management                                        */
+/* ------------------------------------------------------------------ */
+const admin = new Elysia({ prefix: "/api/admin/users" })
+	.derive(async (c) => {
+		const session = await getSession(c);
+		return { adminSession: session, adminUser: requireSuperadmin(session) };
+	})
+	.onBeforeHandle(({ adminUser, set }) => {
+		if (!adminUser) {
+			set.status = 403;
+			return { message: "Superadmin access required" };
+		}
+	});
+
+admin
+	.get("/", async () => {
+		const users = await prisma.user.findMany({
+			select: {
+				id: true,
+				username: true,
+				role: true,
+				createdAt: true,
+				_count: { select: { codes: true } },
+			},
+			orderBy: { id: "asc" },
+		});
+		return { users };
+	})
+	.post(
+		"/",
+		async ({ body, set }) => {
+			const { username, password, role } = body || {};
+			if (
+				!username ||
+				!password ||
+				String(username).length > 30 ||
+				!/^[a-zA-Z0-9_]+$/.test(String(username))
+			) {
+				set.status = 400;
+				return { message: "Invalid username or password" };
+			}
+			if (String(password).length < 8) {
+				set.status = 400;
+				return { message: "Password must be at least 8 characters" };
+			}
+			const r = String(role || "user");
+			if (r !== "user" && r !== "superadmin") {
+				set.status = 400;
+				return { message: "Invalid role" };
+			}
+
+			const existing = await prisma.user.findUnique({
+				where: { username: String(username) },
+			});
+			if (existing) {
+				set.status = 400;
+				return { message: "That username is already taken" };
+			}
+
+			const hash = await bcrypt.hash(String(password), 12);
+			const user = await prisma.user.create({
+				data: { username: String(username), password: hash, role: r },
+				select: { id: true, username: true, role: true, createdAt: true },
+			});
+			return { message: "User created", user };
+		},
+		{ beforeHandle: [rateLimit({ windowMs: 60_000, max: 10, scope: "admin-create" })] }
+	)
+	.delete("/:id", async ({ params, set, adminUser }) => {
+		const id = Number(params.id);
+		if (id === adminUser.userId) {
+			set.status = 400;
+			return { message: "You cannot delete your own account" };
+		}
+
+		// Prevent demoting/deleting the last superadmin.
+		const target = await prisma.user.findUnique({ where: { id } });
+		if (!target) {
+			set.status = 404;
+			return { message: "User not found" };
+		}
+		if (target.role === "superadmin") {
+			const superadminCount = await prisma.user.count({
+				where: { role: "superadmin" },
+			});
+			if (superadminCount <= 1) {
+				set.status = 400;
+				return { message: "Cannot delete the last superadmin" };
+			}
+		}
+
+		await prisma.user.delete({ where: { id } }); // codes.userId FK → SET NULL
+		return { message: "User deleted" };
+	})
+	.patch("/:id/password", async ({ params, body, set }) => {
+		const id = Number(params.id);
+		const { password } = body || {};
+		if (!password || String(password).length < 8) {
+			set.status = 400;
+			return { message: "Password must be at least 8 characters" };
+		}
+		const target = await prisma.user.findUnique({ where: { id } });
+		if (!target) {
+			set.status = 404;
+			return { message: "User not found" };
+		}
+		const hash = await bcrypt.hash(String(password), 12);
+		await prisma.user.update({
+			where: { id },
+			data: { password: hash },
+		});
+		return { message: "Password reset" };
+	})
+	.patch("/:id/role", async ({ params, body, set, adminUser }) => {
+		const id = Number(params.id);
+		const { role } = body || {};
+		const r = String(role || "");
+		if (r !== "user" && r !== "superadmin") {
+			set.status = 400;
+			return { message: "Invalid role" };
+		}
+
+		const target = await prisma.user.findUnique({ where: { id } });
+		if (!target) {
+			set.status = 404;
+			return { message: "User not found" };
+		}
+
+		// Prevent self-demotion (last superadmin lock).
+		if (
+			id === adminUser.userId &&
+			target.role === "superadmin" &&
+			r === "user"
+		) {
+			const superadminCount = await prisma.user.count({
+				where: { role: "superadmin" },
+			});
+			if (superadminCount <= 1) {
+				set.status = 400;
+				return { message: "Cannot demote the last superadmin" };
+			}
+		}
+
+		await prisma.user.update({
+			where: { id },
+			data: { role: r },
+		});
+		return { message: "Role updated" };
+	});
+
+app.use(admin);
 
 /* ------------------------------------------------------------------ */
 /* SPA fallback + server                                             */

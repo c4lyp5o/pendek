@@ -40,24 +40,6 @@ export function SessionProvider({ children }) {
 		}
 	};
 
-	const signup = async (payload) => {
-		setIsLoading(true);
-		try {
-			const res = await fetch("/api/auth/signup", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				credentials: "include",
-				body: JSON.stringify(payload),
-			});
-			const data = await res.json();
-			if (!res.ok) throw new Error(data.message || "Signup failed");
-			setSession({ isLoggedIn: true, ...data });
-			return data;
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
 	const logout = async () => {
 		await fetch("/api/auth/logout", {
 			method: "POST",
@@ -74,7 +56,7 @@ export function SessionProvider({ children }) {
 
 	return (
 		<SessionContext.Provider
-			value={{ session, isLoading, login, signup, logout, refresh }}
+			value={{ session, isLoading, login, logout, refresh }}
 		>
 			{children}
 		</SessionContext.Provider>

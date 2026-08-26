@@ -7,15 +7,21 @@ import {
 	XMarkIcon,
 	GlobeEuropeAfricaIcon,
 	ForwardIcon,
+	UserGroupIcon,
 } from "@heroicons/react/24/outline";
 
 import { useSession } from "../context/session";
 import { useTheme } from "../context/theme";
 import LoadingScreenNoThanks from "../components/loadingScreenNoThanks";
 
-const links = [
+const userLinks = [
 	{ href: "/dashboard", label: "Home", icon: HomeIcon },
 	{ href: "/dashboard/links", label: "Links", icon: GlobeEuropeAfricaIcon },
+];
+
+const adminLinks = [
+	{ href: "/dashboard", label: "Home", icon: HomeIcon },
+	{ href: "/dashboard/users", label: "Users", icon: UserGroupIcon },
 ];
 
 function ThemeToggle() {
@@ -43,6 +49,8 @@ export default function ProtectedLayout() {
 	}, [session, isLoading, navigate]);
 
 	if (isLoading) return <LoadingScreenNoThanks />;
+
+	const links = session.role === "superadmin" ? adminLinks : userLinks;
 
 	const handleLogout = async () => {
 		await logout();
