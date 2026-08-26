@@ -22,19 +22,20 @@ export default function Login() {
 		}
 		setLoading(true);
 		try {
-			await login({
+				const data = await login({
 				username: formData.username,
 				password: formData.password,
 			});
-			router("/dashboard/links");
-		} catch (error) {
+				router(data.role === "superadmin" ? "/dashboard/users" : "/dashboard/links");
+			} catch (error) {
 			toast.error(`Oops! ${error.message}`);
 			setLoading(false);
 		}
 	};
 
 	useEffect(() => {
-		if (!isLoading && session.isLoggedIn) router("/dashboard/links");
+		if (!isLoading && session.isLoggedIn)
+			router(session.role === "superadmin" ? "/dashboard/users" : "/dashboard/links");
 	}, [session, isLoading, router]);
 
 	if (isLoading) return <LoadingScreenNoThanks />;

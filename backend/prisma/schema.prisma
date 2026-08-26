@@ -29,9 +29,10 @@ model Url {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  username String @unique
-  password String
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      String   @default("user") // "superadmin" | "user"
   createdAt DateTime @default(now())
-  codes    Code[]
+  codes     Code[]
 }
