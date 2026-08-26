@@ -13,7 +13,7 @@
 		"test:backend": "cd backend && bun test",
 		"build:client": "cd frontend && bun run build",
 		"build": "bun run build:client",
-		"db:migrate": "cd backend && bun prisma migrate deploy",
+		"db:migrate": "cd backend && bun prisma db push",
 		"start": "cd backend && PORT=5000 bun index.js"
 	},
 	"devDependencies": {
