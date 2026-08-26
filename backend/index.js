@@ -240,7 +240,9 @@ app
 		});
 
 		// Always run a compare even for missing users, to keep timing constant.
-		const hash = user?.password || "$2a$12$C6UzMDM.H6dfI/f/IKcEeO7M.abcdefghijklmnopqrstuv";
+		// The fallback is a REAL bcrypt hash of a dummy password — a malformed
+		// hash would make compare() return immediately and leak via timing.
+		const hash = user?.password || "$2a$12$6pX3jt3ygSEq4KaK3I.3eehUI6NvPsH7Rb1lE66l7ARzloN1erEO2";
 		const ok = await bcrypt.compare(String(password), hash);
 
 		if (!user || !ok) {
