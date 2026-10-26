@@ -1,0 +1,25 @@
+services:
+  pendek:
+    image: ghcr.io/c4lyp5o/pendek:latest
+    container_name: pendek
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - POSTGRES_URL=${POSTGRES_URL}
+      - COOKIE_PASSWORD=${COOKIE_PASSWORD}
+      - BASE_URL=https://p.calypsocloud.one
+      - ALLOWED_HOSTS=p.calypsocloud.one
+      - TZ=Asia/Kuala_Lumpur
+    networks:
+      - traefik_default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_default"
+      - "traefik.http.routers.pendek.rule=Host(`p.calypsocloud.one`)"
+      - "traefik.http.routers.pendek.entrypoints=websecure"
+      - "traefik.http.services.pendek.loadbalancer.server.port=5000"
+
+networks:
+  traefik_default:
+    external: true
