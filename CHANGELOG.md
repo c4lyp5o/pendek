@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Deployments behind a reverse proxy must set `TRUST_PROXY=true`, which `compose.yml` already does. Without it, all clients share the proxy's rate-limit bucket.
 - Default branches are now `master` (release) and `development` (integration).
 - README rewritten for the Bun/Elysia/Vite stack.
+- Removed leftover Next.js config (`.eslintrc.json` and stale Next-era `.dockerignore` entries).
 - Dependabot now tracks the Bun lockfiles and GitHub Actions.
 
 ## [2.0.0] - 2026-08
