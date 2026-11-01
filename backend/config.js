@@ -22,6 +22,12 @@ export const config = {
 	// security
 	disableAutoCreate: process.env.DISABLE_AUTO_CREATE === "true",
 	honeypotField: process.env.HONEYPOT_FIELD || "company",
+	// Only trust X-Forwarded-For when running behind our own reverse proxy.
+	trustProxy: process.env.TRUST_PROXY === "true",
+	// Input limits for link creation
+	maxUrlsPerLink: Number(process.env.MAX_URLS_PER_LINK) || 10,
+	maxUrlLength: Number(process.env.MAX_URL_LENGTH) || 2048,
+	maxTagLength: Number(process.env.MAX_TAG_LENGTH) || 50,
 };
 
 export const sessionOptions = {

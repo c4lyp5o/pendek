@@ -13,7 +13,7 @@ const TEST_PORT = 5129;
 const BASE = `http://127.0.0.1:${TEST_PORT}`;
 const PREFIX = "__TEST_";
 // Each request pretends to come from a distinct IP (rate-limit.js keys on
-// x-forwarded-for first). Without this, the login limiter (10/min/IP) starves
+// x-forwarded-for when TRUST_PROXY=true). Without this, the login limiter (10/min/IP) starves
 // later tests and every admin call looks like a 403 auth failure instead.
 let ipSeq = 0;
 function nextIp() {
@@ -107,6 +107,7 @@ beforeAll(async () => {
 		PORT: String(TEST_PORT),
 		POSTGRES_URL: testDbUrl(),
 		NODE_ENV: "test",
+		TRUST_PROXY: "true",
 	};
 	proc = Bun.spawn(["bun", "index.js"], {
 		cwd: ROOT,
@@ -341,4 +342,39 @@ describe("admin user CRUD (e2e)", () => {
 		expect(r.status).toBe(400);
 		expect(r.data?.message).toMatch(/last superadmin/i);
 	});
+});
+
+describe("hardening", () => {
+	test("public create rejects too many URLs", async () => {
+		const urls = Array.from({ length: 11 }, (_, i) => `https://example.com/${i}`);
+		const r = await api("/api/create", { method: "POST", body: { urls } });
+		expect(r.status).toBe(400);
+		expect(r.data?.message).toMatch(/at most/i);
+	});
+
+	test("public create rejects a filled honeypot field", async () => {
+		const r = await api("/api/create", {
+			method: "POST",
+			body: { url: "https://example.com", company: "spam inc" },
+		});
+		expect(r.status).toBe(400);
+	});
+
+	test("login limiter keys on the proxy-appended IP, not a spoofed first hop", async () => {
+		const real = "203.0.113.77";
+		let last = null;
+		for (let i = 0; i < 11; i++) {
+			const res = await fetch(`${BASE}/api/auth/login`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					// attacker rotates the first entry; proxy appends the real IP
+					"X-Forwarded-For": `198.51.100.${i + 1}, ${real}`,
+				},
+				body: JSON.stringify({ username: "__TEST_nobody", password: "wrong-pass" }),
+			});
+			last = res.status;
+		}
+		expect(last).toBe(429);
+	}, 30000);
 });

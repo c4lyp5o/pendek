@@ -10,6 +10,7 @@ services:
       - COOKIE_PASSWORD=${COOKIE_PASSWORD}
       - BASE_URL=https://p.calypsocloud.one
       - ALLOWED_HOSTS=p.calypsocloud.one
+      - TRUST_PROXY=true
       - TZ=Asia/Kuala_Lumpur
     networks:
       - traefik_default

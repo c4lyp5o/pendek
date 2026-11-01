@@ -59,6 +59,29 @@ async function createCodeRow(buildData, attempts = 5) {
 	throw new Error("Could not allocate a unique short code");
 }
 
+// Validate + normalize the URL/tag lists of a create/edit body. Returns
+// { error } or { items: [{ url, tag }] }. Enforces count and length caps.
+function cleanUrls(urls, tags) {
+	if (!Array.isArray(urls) || urls.length === 0) {
+		return { error: "At least one URL required" };
+	}
+	if (urls.length > config.maxUrlsPerLink) {
+		return { error: `At most ${config.maxUrlsPerLink} URLs per link` };
+	}
+	const tagsArr = Array.isArray(tags) ? tags : [];
+	const items = [];
+	for (let i = 0; i < urls.length; i++) {
+		const s = sanitizeUrl(urls[i], config.maxUrlLength);
+		if (!s || isBlockedUrl(s)) return { error: "One or more URLs are invalid" };
+		const t = tagsArr[i];
+		if (t != null && (typeof t !== "string" || t.length > config.maxTagLength)) {
+			return { error: `Tags must be at most ${config.maxTagLength} characters` };
+		}
+		items.push({ url: s, tag: t ? t : null });
+	}
+	return { items };
+}
+
 const app = new Elysia()
 	// Baseline browser security headers on every response (API + SPA + assets).
 	// Note: HSTS omitted deliberately — homelab serves plain HTTP on LAN; add
@@ -143,33 +166,27 @@ app.get("/:code", async ({ params, set }) => {
 app.post(
 	"/api/create",
 	async ({ body, set, request }) => {
-		const urls = Array.isArray(body?.urls) ? body.urls : [body?.url];
-
-		const cleaned = [];
-		for (const u of urls) {
-			const s = sanitizeUrl(u);
-			if (!s || isBlockedUrl(s)) {
-				set.status = 400;
-				return { message: "Invalid URL" };
-			}
-			cleaned.push(s);
+		if (config.disableAutoCreate) {
+			set.status = 403;
+			return { message: "Anonymous link creation is disabled" };
 		}
-		if (cleaned.filter(Boolean).length === 0) {
+		// Honeypot: a hidden form field real users never fill in.
+		if (body?.[config.honeypotField]) {
 			set.status = 400;
-			return { message: "At least one valid URL required" };
+			return { message: "Invalid request" };
 		}
 
-		const tags = Array.isArray(body?.tags) ? body.tags : [];
+		const urls = Array.isArray(body?.urls) ? body.urls : [body?.url];
+		const { error, items } = cleanUrls(urls, body?.tags);
+		if (error) {
+			set.status = 400;
+			return { message: error };
+		}
 
 		const { code } = await createCodeRow((code) => ({
 			code,
-			isMultiple: cleaned.length > 1,
-			urls: {
-				create: cleaned.map((u, i) => ({
-					url: u,
-					tag: typeof tags[i] === "string" && tags[i] ? tags[i] : null,
-				})),
-			},
+			isMultiple: items.length > 1,
+			urls: { create: items },
 		}));
 
 		return {
@@ -283,31 +300,17 @@ authed
 			code = null; // auto-generate
 		}
 
-		if (!Array.isArray(urls) || urls.length === 0) {
+		const { error, items } = cleanUrls(urls, tags);
+		if (error) {
 			set.status = 400;
-			return { message: "At least one URL required" };
-		}
-		const cleaned = [];
-		for (const u of urls) {
-			const s = sanitizeUrl(u);
-			if (!s || isBlockedUrl(s)) {
-				set.status = 400;
-				return { message: "One or more URLs are invalid" };
-			}
-			cleaned.push(s);
+			return { message: error };
 		}
 
-		const tagsArr = Array.isArray(tags) ? tags : [];
 		const buildData = (c) => ({
 			code: c,
-			isMultiple: cleaned.length > 1,
+			isMultiple: items.length > 1,
 			belongsTo: { connect: { id: authedUser.userId } },
-			urls: {
-				create: cleaned.map((u, i) => ({
-					url: u,
-					tag: typeof tagsArr[i] === "string" && tagsArr[i] ? tagsArr[i] : null,
-				})),
-			},
+			urls: { create: items },
 		});
 		let finalCode;
 		if (code) {
@@ -392,30 +395,17 @@ authed
 		}
 
 		if (Array.isArray(urls) && urls.length > 0) {
-			const cleaned = [];
-			for (const u of urls) {
-				const s = sanitizeUrl(u);
-				if (!s || isBlockedUrl(s)) {
-					set.status = 400;
-					return { message: "Invalid URL" };
-				}
-				cleaned.push(s);
+			const { error, items } = cleanUrls(urls, tags);
+			if (error) {
+				set.status = 400;
+				return { message: error };
 			}
-			const tagsArr = Array.isArray(tags) ? tags : [];
 			// URL replace + code rename must be atomic: a crash between deleteMany
 			// and create would otherwise leave the link with zero URLs.
 			const updated = await prisma.$transaction(async (tx) => {
 				await tx.url.deleteMany({ where: { codeId: id } });
 				await Promise.all(
-					cleaned.map((u, i) =>
-						tx.url.create({
-							data: {
-								codeId: id,
-								url: u,
-								tag: typeof tagsArr[i] === "string" && tagsArr[i] ? tagsArr[i] : null,
-							},
-						})
-					)
+					items.map((it) => tx.url.create({ data: { codeId: id, ...it } }))
 				);
 				return tx.code.update({
 					where: { id },

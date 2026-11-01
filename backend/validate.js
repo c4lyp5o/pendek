@@ -2,9 +2,10 @@
  * Normalize + validate an inbound URL. Rejects anything that is not
  * http/https, and collapses junk. Returns the cleaned URL or null.
  */
-export function sanitizeUrl(raw) {
+export function sanitizeUrl(raw, maxLength = 2048) {
 	if (typeof raw !== "string") return null;
 	let url = raw.trim();
+	if (url.length > maxLength) return null;
 
 	// lowercase scheme only so we accept "HTTP://" but still enforce scheme
 	const lower = url.toLowerCase();
@@ -41,18 +42,16 @@ export function sanitizeCode(raw) {
 	return code;
 }
 
-/** Reserved-ish: blocks obviously dangerous destinations used for phishing. */
-export const BLOCKED_HOST_SUBSTRINGS = [
-	"bit.ly", // self-promoted shorteners
-	"t.co",
-	"tinyurl",
-];
+/** Blocked destination domains (other shorteners, to stop redirect chains). */
+export const BLOCKED_HOSTS = ["bit.ly", "t.co", "tinyurl.com"];
 
+// Matches the domain itself or any subdomain — never a substring, so
+// "microsoft.com" is not caught by "t.co".
 export function isBlockedUrl(normalized) {
 	try {
 		const u = new URL(normalized);
-		const host = u.hostname.toLowerCase();
-		return BLOCKED_HOST_SUBSTRINGS.some((b) => host.includes(b));
+		const host = u.hostname.toLowerCase().replace(/\.$/, "");
+		return BLOCKED_HOSTS.some((b) => host === b || host.endsWith("." + b));
 	} catch {
 		return true;
 	}
