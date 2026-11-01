@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Security
+- Sessions are re-checked against the database on every authenticated request. A deleted user is logged out, and a demoted superadmin loses admin access immediately instead of after the cookie TTL (up to 7 days).
+
+### Fixed
+- The CSP blocked the Google Fonts stylesheet and font files, so the UI fell back to system fonts in production.
+- Click counts are no longer lost when a batch write fails (failed increments are requeued) or when the container stops (final flush on SIGTERM/SIGINT).
+
+### Changed
+- The schema is now managed with versioned Prisma migrations (`prisma/migrations`, baseline `0_init`) and applied with `prisma migrate deploy` at container start, instead of `prisma db push`. On first start, databases created with the old `db push` are synced and baselined automatically, and existing data is kept.
+
 ## [2.1.0] - 2026-11-02
 
 ### Security

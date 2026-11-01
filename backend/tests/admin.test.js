@@ -378,3 +378,36 @@ describe("hardening", () => {
 		expect(last).toBe(429);
 	}, 30000);
 });
+
+describe("stale sessions (e2e)", () => {
+	test("demoted superadmin loses admin access on the same cookie", async () => {
+		const name = `${PREFIX}demote`;
+		const hash = await bcrypt.hash("demote-pass-123", 12);
+		const u = await prisma.user.create({ data: { username: name, password: hash, role: "superadmin" } });
+		const l = await login(name, "demote-pass-123");
+		expect((await api("/api/admin/users", { cookie: l.cookie })).status).toBe(200);
+
+		await prisma.user.update({ where: { id: u.id }, data: { role: "user" } });
+		expect((await api("/api/admin/users", { cookie: l.cookie })).status).toBe(403);
+		const s = await api("/api/session", { cookie: l.cookie });
+		expect(s.data?.role).toBe("user");
+	});
+
+	test("deleted user's session is treated as logged out", async () => {
+		const name = `${PREFIX}gone`;
+		const hash = await bcrypt.hash("gone-pass-123", 12);
+		const u = await prisma.user.create({ data: { username: name, password: hash } });
+		const l = await login(name, "gone-pass-123");
+		expect((await api("/api/links", { cookie: l.cookie })).status).toBe(200);
+
+		await prisma.user.delete({ where: { id: u.id } });
+		expect((await api("/api/links", { cookie: l.cookie })).status).toBe(401);
+		const create = await api("/api/links/create", {
+			method: "POST",
+			cookie: l.cookie,
+			body: { urls: ["https://example.com"] },
+		});
+		expect(create.status).toBe(401);
+		expect((await api("/api/session", { cookie: l.cookie })).data?.isLoggedIn).toBe(false);
+	});
+});

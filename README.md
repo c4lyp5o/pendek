@@ -29,7 +29,7 @@ cp .env.example backend/.env
 # edit backend/.env: set POSTGRES_URL and COOKIE_PASSWORD (openssl rand -hex 32)
 
 cd backend
-bun run db:push            # create/update the schema
+bun run db:migrate         # apply migrations
 bun run create-superadmin admin 'a-strong-password'
 cd ..
 
@@ -50,7 +50,9 @@ docker compose up -d
 docker compose exec pendek bun scripts/create-superadmin.js admin 'a-strong-password'
 ```
 
-The container applies the Prisma schema (`prisma db push`) on every start, then serves on port 5000.
+On start, the container applies pending migrations (`prisma migrate deploy`) and then serves on port 5000. A database created by an older version with `prisma db push` is baselined automatically on first start.
+
+To change the schema, edit `backend/prisma/schema.prisma` and run `bun run db:migration --name <change>`. Then commit the generated folder under `prisma/migrations/`.
 
 ## Configuration
 
@@ -77,7 +79,7 @@ The container applies the Prisma schema (`prisma db push`) on every start, then 
 cd backend && bun test
 ```
 
-The admin/end-to-end suite spawns a real server against a scratch database. It takes `POSTGRES_URL` and swaps `/pendek_dev` for `/pendek_test`, so that database must exist and have the schema pushed.
+The admin/end-to-end suite spawns a real server against a scratch database. It takes `POSTGRES_URL` and swaps `/pendek_dev` for `/pendek_test`, so that database must exist and have the migrations applied (`POSTGRES_URL=…/pendek_test bunx prisma migrate deploy`).
 
 ## Branches & releases
 

@@ -15,6 +15,7 @@ import {
 	cacheNegative,
 	trackClick,
 	startClickFlush,
+	flushOnShutdown,
 } from "./cache.js";
 
 // Cache miss -> load a Code row from Postgres and convert it into the compact
@@ -93,7 +94,7 @@ const app = new Elysia()
 			"Referrer-Policy": "strict-origin-when-cross-origin",
 			"Permissions-Policy": "camera=(), microphone=(), geolocation=()",
 			"Content-Security-Policy":
-				"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'",
+				"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'",
 		};
 		set.headers = { ...h, ...(set.headers || {}) };
 	})
@@ -205,7 +206,7 @@ app.post(
 /* ------------------------------------------------------------------ */
 app
 	.get("/api/session", async (c) => {
-		const session = await getSession(c);
+		const session = await requireLogin(await getSession(c));
 		return {
 			isLoggedIn: !!session?.isLoggedIn,
 			username: session?.username || "",
@@ -449,8 +450,8 @@ app.use(authed);
 /* ------------------------------------------------------------------ */
 const admin = new Elysia({ prefix: "/api/admin/users" })
 	.derive(async (c) => {
-		const session = await getSession(c);
-		return { adminSession: session, adminUser: requireSuperadmin(session) };
+		const session = await requireLogin(await getSession(c));
+		return { adminUser: requireSuperadmin(session) };
 	})
 	.onBeforeHandle(({ adminUser, set }) => {
 		if (!adminUser) {
@@ -677,5 +678,5 @@ app.get("*", ({ request }) => {
 app.listen(config.port, () => {
 	console.log(`🩷 pendek running at http://localhost:${config.port}`);
 	// Periodic flush of buffered redirect click counts to Postgres.
-	startClickFlush();
+	flushOnShutdown(startClickFlush());
 });

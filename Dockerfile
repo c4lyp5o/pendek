@@ -41,7 +41,6 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 	CMD curl -fsS http://localhost:5000/api/session || exit 1
 
-# Apply schema at container start (needs live DB; never at build time).
-# This project manages schema via `db push` (no migrations/ dir), so we do
-# the same here, then serve.
-CMD ["sh", "-c", "bunx prisma db push --schema prisma/schema.prisma && exec bun index.js"]
+# Apply versioned migrations at container start (needs live DB; never at
+# build time). See docker-entrypoint.sh for the one-time db-push baseline.
+CMD ["./docker-entrypoint.sh"]

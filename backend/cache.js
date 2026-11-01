@@ -83,7 +83,7 @@ export async function flushClicks() {
 	if (clicks.size === 0) return;
 	const pending = Array.from(clicks.entries());
 	clicks.clear();
-	await Promise.all(
+	const results = await Promise.allSettled(
 		pending.map(([id, n]) =>
 			prisma.$executeRaw`
 				UPDATE "Code"
@@ -92,11 +92,27 @@ export async function flushClicks() {
 			`
 		)
 	);
+	// Put failed increments back so the next flush retries them instead of
+	// silently dropping the counts.
+	let failed = 0;
+	results.forEach((r, i) => {
+		if (r.status === "rejected") {
+			const [id, n] = pending[i];
+			clicks.set(id, (clicks.get(id) || 0) + n);
+			failed++;
+		}
+	});
+	if (failed) throw new Error(`${failed} click increment(s) failed, requeued`);
+}
+
+/** Buffered clicks not yet written (for tests/diagnostics). */
+export function pendingClicks() {
+	return new Map(clicks);
 }
 
 /** Start the periodic counter flush. Guarded against overlapping runs. */
 export function startClickFlush(intervalMs = 10_000) {
-	setInterval(async () => {
+	return setInterval(async () => {
 		if (flushing) return;
 		flushing = true;
 		try {
@@ -107,4 +123,28 @@ export function startClickFlush(intervalMs = 10_000) {
 			flushing = false;
 		}
 	}, intervalMs);
+}
+
+/**
+ * Flush once more and exit on SIGTERM/SIGINT (docker stop, Ctrl+C), so a
+ * redeploy doesn't lose up to one interval of clicks.
+ */
+export function flushOnShutdown(timer) {
+	let stopping = false;
+	const stop = async (signal) => {
+		if (stopping) return;
+		stopping = true;
+		clearInterval(timer);
+		try {
+			// wait for an in-flight interval flush, then drain the rest
+			while (flushing) await new Promise((r) => setTimeout(r, 50));
+			await flushClicks();
+		} catch (err) {
+			console.error(`[cache] final click flush failed on ${signal}:`, err?.message || err);
+		}
+		await prisma.$disconnect().catch(() => {});
+		process.exit(0);
+	};
+	process.on("SIGTERM", () => stop("SIGTERM"));
+	process.on("SIGINT", () => stop("SIGINT"));
 }

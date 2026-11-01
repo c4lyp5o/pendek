@@ -1,6 +1,7 @@
 import { getIronSession } from "iron-session";
 import cookie from "cookie";
 import { sessionOptions, config } from "./config.js";
+import { prisma } from "./db.js";
 
 /**
  * iron-session adapter backed by Elysia's raw request Cookie header (read)
@@ -44,7 +45,12 @@ export async function getSession(c) {
 	}
 }
 
-/** Returns the session if logged in and not expired, else null. */
+/**
+ * Returns the session if logged in, not expired, and the user still exists,
+ * else null. The cookie is a snapshot from login time, so role/username are
+ * re-read from the DB on every call: a deleted user is logged out and a
+ * demoted superadmin loses access immediately rather than after COOKIE_TTL.
+ */
 export async function requireLogin(session) {
 	if (!session || session.isLoggedIn !== true) return null;
 
@@ -56,6 +62,18 @@ export async function requireLogin(session) {
 		}
 	}
 
+	const user = session.userId
+		? await prisma.user.findUnique({
+				where: { id: session.userId },
+				select: { username: true, role: true },
+			})
+		: null;
+	if (!user) {
+		await session.destroy();
+		return null;
+	}
+	session.username = user.username;
+	session.role = user.role;
 	return session;
 }
 
