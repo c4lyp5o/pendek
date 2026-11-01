@@ -5,25 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-### Security
-- Sessions are re-checked against the database on every authenticated request. A deleted user is logged out, and a demoted superadmin loses admin access immediately instead of after the cookie TTL (up to 7 days).
-
-### Fixed
-- The CSP blocked the Google Fonts stylesheet and font files, so the UI fell back to system fonts in production.
-- Click counts are no longer lost when a batch write fails (failed increments are requeued) or when the container stops (final flush on SIGTERM/SIGINT).
-
-### Changed
-- The schema is now managed with versioned Prisma migrations (`prisma/migrations`, baseline `0_init`) and applied with `prisma migrate deploy` at container start, instead of `prisma db push`. On first start, databases created with the old `db push` are synced and baselined automatically, and existing data is kept.
-
 ## [2.1.0] - 2026-11-02
 
 ### Security
 - The rate limiter no longer trusts the client-controlled first `X-Forwarded-For` hop. Forwarded IPs are honoured only when `TRUST_PROXY=true`, and then only the last, proxy-appended entry. Previously, rotating the header bypassed login throttling.
 - Link creation now caps the number of URLs, URL length and tag length (`MAX_URLS_PER_LINK`, `MAX_URL_LENGTH`, `MAX_TAG_LENGTH`).
 - `DISABLE_AUTO_CREATE` and `HONEYPOT_FIELD` are now enforced on anonymous `/api/create`. They were previously defined but unused.
+- Sessions are re-checked against the database on every authenticated request. A deleted user is logged out, and a demoted superadmin loses admin access immediately instead of after the cookie TTL (up to 7 days).
 
 ### Fixed
 - The blocked-domain check matched substrings, so `microsoft.com`, `reddit.com` and others were rejected because they contain `t.co`. It now matches exact domains and their subdomains.
+- The CSP blocked the Google Fonts stylesheet and font files, so the UI fell back to system fonts in production.
+- Click counts are no longer lost when a batch write fails (failed increments are requeued) or when the container stops (final flush on SIGTERM/SIGINT).
 
 ### Added
 - `bun run create-superadmin <user> <pass>` script to bootstrap the first account.
@@ -32,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - This changelog.
 
 ### Changed
+- **Database:** the schema is now managed with versioned Prisma migrations (`prisma/migrations`, baseline `0_init`) and applied with `prisma migrate deploy` at container start, instead of `prisma db push`. On first start, databases created with the old `db push` are synced and baselined automatically, and existing data is kept. Back up the database before upgrading.
 - Deployments behind a reverse proxy must set `TRUST_PROXY=true`, which `compose.yml` already does. Without it, all clients share the proxy's rate-limit bucket.
 - Default branches are now `master` (release) and `development` (integration).
 - README rewritten for the Bun/Elysia/Vite stack.
