@@ -1,0 +1,57 @@
+name: CI
+
+# Pushes to master/development run this via docker-publish.yml (tests gate the image).
+on:
+  pull_request:
+    branches: [master, development]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pendek
+          POSTGRES_PASSWORD: pendek
+          POSTGRES_DB: pendek_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pendek"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # The admin suite swaps /pendek_dev -> /pendek_test, so tests hit pendek_test.
+      POSTGRES_URL: postgresql://pendek:pendek@localhost:5432/pendek_dev
+      COOKIE_PASSWORD: ci-only-cookie-password-not-a-secret-0123456789
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bunx prisma generate
+      - name: Push schema to test DB
+        run: POSTGRES_URL=postgresql://pendek:pendek@localhost:5432/pendek_test bunx prisma db push --skip-generate
+      - run: bun test
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun run build

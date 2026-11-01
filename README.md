@@ -1,69 +1,97 @@
-# 🔗 P E N D E K Project 🔗
+# 🔗 pendek
 
-This is a URL shortener project built with [Next.js](https://nextjs.org/). It allows users to shorten long URLs and manage their links.
+A small, self-hosted URL shortener. *Pendek* is Malay for "short".
 
-## 🚀 Getting Started 🚀
+- **Backend:** [Bun](https://bun.sh) + [Elysia](https://elysiajs.com) + [Prisma](https://www.prisma.io) on PostgreSQL
+- **Frontend:** React 19 + Vite, served as a static SPA by the backend
+- **Shipped as:** one Docker image, `ghcr.io/c4lyp5o/pendek`
 
-First, clone the repository to your local machine:
+## Features
+
+- Anonymous short links from the home page. You can turn this off with `DISABLE_AUTO_CREATE=true`.
+- Accounts that can create custom codes (4–25 alphanumeric characters) and edit, disable or delete their links
+- **Multi-links:** one code that opens a picker with several tagged destinations
+- QR code for every link
+- Click counting, buffered in memory and written to the database in batches
+- Superadmin role that manages users. There is no public signup.
+- Hardening: rate limiting, constant-time login, `http`/`https`-only URL validation, blocked shortener domains, input size caps, CSP and security headers, and a `Host` header allowlist for generated links
+
+## Quick start (development)
+
+Requirements: Bun ≥ 1.4 and PostgreSQL.
 
 ```bash
 git clone https://github.com/c4lyp5o/pendek.git
+cd pendek
+bun run install            # installs backend + frontend deps
+
+cp .env.example backend/.env
+# edit backend/.env: set POSTGRES_URL and COOKIE_PASSWORD (openssl rand -hex 32)
+
+cd backend
+bun run db:push            # create/update the schema
+bun run create-superadmin admin 'a-strong-password'
+cd ..
+
+bun run dev                # backend :5000 + Vite dev server
 ```
 
-Then, install the dependencies:
+## Deploying with Docker
+
+`compose.yml` runs the published image behind Traefik. Secrets come from a gitignored `.env` next to it:
+
+```env
+POSTGRES_URL=postgresql://user:password@db-host:5432/pendek
+COOKIE_PASSWORD=<at least 32 random characters>
+```
 
 ```bash
-npm install
-# or
-yarn install
+docker compose up -d
+docker compose exec pendek bun scripts/create-superadmin.js admin 'a-strong-password'
 ```
 
-If this is your first time running the project, you need to create a `.env` file in the root directory. Example can be found in `.env.example`. You need to fill in the environment variables with your own values.
+The container applies the Prisma schema (`prisma db push`) on every start, then serves on port 5000.
 
-You would also need to migrate the database. Run the following command:
+## Configuration
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `POSTGRES_URL` | — (required) | PostgreSQL connection string |
+| `COOKIE_PASSWORD` | — (required) | Session encryption key, at least 32 chars |
+| `PORT` | `5000` | HTTP port |
+| `BASE_URL` | `http://localhost:5000` | Fallback origin used in generated short URLs |
+| `ALLOWED_HOSTS` | *(empty)* | Comma-separated extra hosts allowed in generated short URLs |
+| `TRUST_PROXY` | `false` | Set `true` **only** behind a reverse proxy that appends `X-Forwarded-For`. The rate limiter then keys on the last (proxy-added) hop. |
+| `DISABLE_AUTO_CREATE` | `false` | `true` disables anonymous link creation |
+| `HONEYPOT_FIELD` | `company` | Body field that marks a bot submission if it is filled in |
+| `MAX_URLS_PER_LINK` | `10` | Max destinations per link |
+| `MAX_URL_LENGTH` | `2048` | Max length of a destination URL |
+| `MAX_TAG_LENGTH` | `50` | Max length of a multi-link tag |
+| `CODE_ALPHABET` / `CODE_LENGTH` | `23456789abcdefghijkmnpqrstuvwxyz` / `6` | Auto-generated code format |
+| `COOKIE_NAME` / `COOKIE_TTL` | `pendek_session` / `604800` | Session cookie name and lifetime (s) |
+| `LOGOUT_TIME` | `86400` | If set, sessions older than this (s) are forced to log in again |
+
+## Testing
 
 ```bash
-npx prisma migrate dev --name init
+cd backend && bun test
 ```
 
-Then generate the Prisma client:
+The admin/end-to-end suite spawns a real server against a scratch database. It takes `POSTGRES_URL` and swaps `/pendek_dev` for `/pendek_test`, so that database must exist and have the schema pushed.
 
-```bash
-npx prisma generate
-```
+## Branches & releases
 
-Finally, run the development server:
+- `development` is the integration branch. Open pull requests against it.
+- `master` is the release branch. Every push builds and publishes `ghcr.io/c4lyp5o/pendek:<version>` and `:latest`.
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+CI runs the test suite and the frontend build on every push and pull request. Versions follow [SemVer](https://semver.org). See [CHANGELOG.md](CHANGELOG.md).
 
-Open http://localhost:3000 with your browser to see the result.
+## Contributing
 
-## 🎯 Features 🎯
+1. Fork the repo and branch off `development`.
+2. Make your change. Add tests and make sure `bun test` passes.
+3. Open a pull request against `development`.
 
-- User registration and authentication
-- URL shortening (public and private)
-- Link management
+## License
 
-## ⚠️ Known Issues ⚠️
-
-If there are any known issues or limitations with the project, list them here.
-
-## 🤝 Contributing 🤝
-
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change. Please make sure to update tests as appropriate.
-
-Here's how you can contribute to the project:
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License 📝
-
-[MIT](https://choosealicense.com/licenses/mit/)
+[MIT](LICENSE) © 2023-2026 c4lyp5o
