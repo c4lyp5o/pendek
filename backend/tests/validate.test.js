@@ -29,6 +29,11 @@ describe("sanitizeUrl", () => {
 		expect(sanitizeUrl("/path")).toBeNull();
 	});
 
+	test("rejects urls over the length cap", () => {
+		expect(sanitizeUrl("https://example.com/" + "a".repeat(3000))).toBeNull();
+		expect(sanitizeUrl("https://example.com/abc", 10)).toBeNull();
+	});
+
 	test("rejects empty / non-string", () => {
 		expect(sanitizeUrl("   ")).toBeNull();
 		expect(sanitizeUrl(null)).toBeNull();
@@ -45,6 +50,17 @@ describe("isBlockedUrl", () => {
 
 	test("allows normal urls", () => {
 		expect(isBlockedUrl("https://example.com")).toBe(false);
+	});
+
+	test("blocks subdomains of blocked hosts", () => {
+		expect(isBlockedUrl("https://www.bit.ly/x")).toBe(true);
+		expect(isBlockedUrl("https://t.co/abc")).toBe(true);
+	});
+
+	test("does not substring-match unrelated domains", () => {
+		expect(isBlockedUrl("https://www.microsoft.com/")).toBe(false);
+		expect(isBlockedUrl("https://reddit.com/r/x")).toBe(false);
+		expect(isBlockedUrl("https://notbit.ly.example.com/")).toBe(false);
 	});
 });
 

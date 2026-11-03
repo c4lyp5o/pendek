@@ -1,3 +1,5 @@
+import { config } from "./config.js";
+
 // Simple in-memory fixed-window rate limiter, keyed per client IP.
 // Good enough for a single-process homelab app. Swap for Redis if you scale.
 
@@ -11,9 +13,16 @@ function storeFor(scope) {
 	return m;
 }
 
+// Client IP for rate-limit keys. X-Forwarded-For is only honoured when
+// TRUST_PROXY=true, and then only its LAST entry — the one appended by our
+// own proxy (Traefik). Earlier entries are client-controlled and spoofable.
 function keyFor(c) {
-	const fwd = c?.request?.headers?.get?.("x-forwarded-for");
-	let ip = fwd ? fwd.split(",")[0].trim() : "";
+	let ip = "";
+	if (config.trustProxy) {
+		const fwd = c?.request?.headers?.get?.("x-forwarded-for");
+		const parts = fwd ? fwd.split(",").map((s) => s.trim()).filter(Boolean) : [];
+		ip = parts.length ? parts[parts.length - 1] : "";
+	}
 	if (!ip) {
 		try {
 			ip = c?.server?.requestIP?.(c.request)?.address || "";

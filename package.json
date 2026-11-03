@@ -1,6 +1,6 @@
 {
 	"name": "pendek",
-	"version": "2.0.0",
+	"version": "2.1.0",
 	"private": true,
 	"description": "Minimal URL shortener — Bun + Elysia + Prisma backend, Vite React frontend.",
 	"scripts": {
@@ -13,7 +13,7 @@
 		"test:backend": "cd backend && bun test",
 		"build:client": "cd frontend && bun run build",
 		"build": "bun run build:client",
-		"db:migrate": "cd backend && bun prisma db push",
+		"db:migrate": "cd backend && bun prisma migrate deploy",
 		"start": "cd backend && PORT=5000 bun index.js"
 	},
 	"devDependencies": {
