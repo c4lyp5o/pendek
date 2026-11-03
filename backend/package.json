@@ -15,7 +15,7 @@
 	},
 	"dependencies": {
 		"@elysiajs/static": "^1.1.0",
-		"@prisma/client": "^5.22.0",
+		"@prisma/client": "^7.10.1",
 		"bcryptjs": "^3.0.3",
 		"cookie": "0.7.2",
 		"elysia": "^1.1.0",
