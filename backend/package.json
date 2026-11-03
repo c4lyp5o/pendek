@@ -20,7 +20,7 @@
 		"cookie": "0.7.2",
 		"elysia": "^1.1.0",
 		"iron-session": "^8.0.2",
-		"nanoid": "^5.0.7",
+		"nanoid": "^6.0.2",
 		"prisma": "^5.22.0"
 	},
 	"devDependencies": {
