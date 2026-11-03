@@ -21,7 +21,7 @@
 		"elysia": "^1.1.0",
 		"iron-session": "^9.0.1",
 		"nanoid": "^6.0.2",
-		"prisma": "^5.22.0"
+		"prisma": "^7.10.1"
 	},
 	"devDependencies": {
 		"@types/bun": "^1.1.0"
